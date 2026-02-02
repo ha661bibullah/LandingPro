@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ল্যান্ডিংপ্রো | এডমিন প্যানেল</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Page -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-lock text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800">ল্যান্ডিংপ্রো এডমিন</h2>
+                <p class="text-gray-600 mt-2">সিকিউর অ্যাক্সেস প্যানেল</p>
+            </div>
+
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 mb-2" for="email">ইমেইল ঠিকানা</label>
+                    <input type="email" id="email" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="admin@landingpro.com">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-2" for="password">পাসওয়ার্ড</label>
+                    <input type="password" id="password" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="••••••••">
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember" class="h-4 w-4 text-blue-600 rounded">
+                    <label for="remember" class="ml-2 text-gray-700">রিমেমবার মি</label>
+                </div>
+
+                <button type="submit" id="login-btn" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-sign-in-alt mr-2"></i>লগইন
+                </button>
+            </form>
+
+            <div id="login-error" class="mt-4 hidden p-3 bg-red-100 text-red-700 rounded-lg text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="dashboard" class="hidden">
+        <!-- Top Navigation -->
+        <nav class="bg-white shadow-md sticky top-0 z-40">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                    <button id="menu-toggle" class="md:hidden text-gray-700 mr-3">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="flex items-center">
+                        <div class="bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-rocket text-white text-lg"></i>
+                        </div>
+                        <span class="ml-3 text-xl font-bold text-gray-800">ল্যান্ডিং<span class="text-blue-600">প্রো</span> <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">এডমিন</span></span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:block text-right">
+                        <p class="text-gray-800 font-medium" id="admin-email"></p>
+                        <p class="text-gray-600 text-sm" id="last-login"></p>
+                    </div>
+                    <div class="relative">
+                        <button id="user-menu" class="flex items-center space-x-2 focus:outline-none">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </button>
+                        <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200 z-50">
+                            <a href="#" id="logout-btn" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>লগআউট
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex">
+            <!-- Sidebar -->
+            <aside class="sidebar w-64 bg-white shadow-md min-h-screen fixed md:relative z-30">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="font-bold text-gray-800">ড্যাশবোর্ড মেনু</h3>
+                </div>
+                
+                <nav class="p-4 space-y-2">
+                    <a href="#" data-section="dashboard-home" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200 active-section">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        ড্যাশবোর্ড
+                    </a>
+                    <a href="#" data-section="contacts" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
+                        <i class="fas fa-users mr-3"></i>
+                        কন্টাক্ট রিকোয়েস্ট
+                    </a>
+                    <a href="#" data-section="analytics" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        অ্যানালিটিক্স
+                    </a>
+                    <a href="#" data-section="settings" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
+                        <i class="fas fa-cog mr-3"></i>
+                        সেটিংস
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 md:ml-64">
+                <!-- Dashboard Home -->
+                <section id="dashboard-home" class="content-section">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">ড্যাশবোর্ড ওভারভিউ</h2>
+                        <p class="text-gray-600">ল্যান্ডিংপ্রো এর সাম্প্রতিক কার্যক্রম এবং পরিসংখ্যান</p>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600">মোট কন্টাক্ট</p>
+                                    <h3 class="text-3xl font-bold text-gray-800" id="total-contacts">0</h3>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <i class="fas fa-users text-blue-600 text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600">নতুন রিকোয়েস্ট</p>
+                                    <h3 class="text-3xl font-bold text-gray-800" id="new-contacts">0</h3>
+                                </div>
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <i class="fas fa-plus-circle text-green-600 text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600">প্রসেসিং</p>
+                                    <h3 class="text-3xl font-bold text-gray-800" id="processing-contacts">0</h3>
+                                </div>
+                                <div class="bg-yellow-100 p-3 rounded-lg">
+                                    <i class="fas fa-spinner text-yellow-600 text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600">সম্পন্ন</p>
+                                    <h3 class="text-3xl font-bold text-gray-800" id="completed-contacts">0</h3>
+                                </div>
+                                <div class="bg-purple-100 p-3 rounded-lg">
+                                    <i class="fas fa-check-circle text-purple-600 text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Contacts -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">সাম্প্রতিক কন্টাক্ট রিকোয়েস্ট</h3>
+                            <a href="#" data-section="contacts" class="text-blue-600 hover:text-blue-800">
+                                সব দেখুন <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">নাম</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ইমেইল</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">প্যাকেজ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">তারিখ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-contacts" class="divide-y divide-gray-200">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contacts Management -->
+                <section id="contacts" class="content-section hidden">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">কন্টাক্ট রিকোয়েস্ট ম্যানেজমেন্ট</h2>
+                        <p class="text-gray-600">সকল কন্টাক্ট রিকোয়েস্ট দেখুন এবং ম্যানেজ করুন</p>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-gray-700 mb-2">স্ট্যাটাস</label>
+                                <select id="status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="all">সব স্ট্যাটাস</option>
+                                    <option value="new">নতুন</option>
+                                    <option value="contacted">যোগাযোগ করা হয়েছে</option>
+                                    <option value="in_progress">প্রসেসিং</option>
+                                    <option value="completed">সম্পন্ন</option>
+                                    <option value="cancelled">বাতিল</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-700 mb-2">প্যাকেজ</label>
+                                <select id="package-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="all">সব প্যাকেজ</option>
+                                    <option value="বেস্ট সেলার">বেস্ট সেলার</option>
+                                    <option value="স্ট্যান্ডার্ড">স্ট্যান্ডার্ড</option>
+                                    <option value="প্রিমিয়াম">প্রিমিয়াম</option>
+                                    <option value="কাস্টম">কাস্টম</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-700 mb-2">সার্চ</label>
+                                <input type="text" id="search-filter" placeholder="নাম, ইমেইল বা মেসেজ"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                            
+                            <div class="flex items-end">
+                                <button id="apply-filters" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
+                                    <i class="fas fa-filter mr-2"></i>ফিল্টার প্রয়োগ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contacts Table -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">নাম</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">যোগাযোগ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">প্যাকেজ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">তারিখ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contacts-table" class="divide-y divide-gray-200">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                            <div class="text-sm text-gray-700">
+                                দেখানো হচ্ছে <span id="page-start">0</span> থেকে <span id="page-end">0</span> এর <span id="total-entries">0</span> টি এন্ট্রি
+                            </div>
+                            <div class="flex space-x-2">
+                                <button id="prev-page" class="px-3 py-1 border border-gray-300 rounded disabled:opacity-50" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span id="current-page" class="px-3 py-1">1</span>
+                                <button id="next-page" class="px-3 py-1 border border-gray-300 rounded disabled:opacity-50" disabled>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analytics -->
+                <section id="analytics" class="content-section hidden">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">অ্যানালিটিক্স এবং রিপোর্ট</h2>
+                        <p class="text-gray-600">প্যাকেজ ভিত্তিক বিশ্লেষণ এবং পারফরম্যান্স রিপোর্ট</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">প্যাকেজ ডিস্ট্রিবিউশন</h3>
+                            <div id="package-chart" class="h-64 flex items-center justify-center">
+                                <p class="text-gray-500">ডেটা লোড হচ্ছে...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">স্ট্যাটাস ডিস্ট্রিবিউশন</h3>
+                            <div id="status-chart" class="h-64 flex items-center justify-center">
+                                <p class="text-gray-500">ডেটা লোড হচ্ছে...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings -->
+                <section id="settings" class="content-section hidden">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">সিস্টেম সেটিংস</h2>
+                        <p class="text-gray-600">এডমিন প্যানেল কনফিগারেশন</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">API কনফিগারেশন</h3>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-gray-700 mb-2">API বেস URL</label>
+                                <input type="text" id="api-url" 
+                                       value="https://landingpro-backend.onrender.com"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50">
+                                <p class="text-gray-600 text-sm mt-2">ব্যাকএন্ড সার্ভারের URL। Render এ ডেপ্লয় করার পর এটি আপডেট করুন।</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-700 mb-2">সিস্টেম স্ট্যাটাস</label>
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full bg-green-500 mr-2" id="api-status"></div>
+                                        <span id="api-status-text">API কানেক্টেড</span>
+                                    </div>
+                                    <button id="test-api" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        টেস্ট কানেকশন
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-6 border-t border-gray-200">
+                                <h4 class="font-bold text-gray-800 mb-4">বাংলাদেশ সময়</h4>
+                                <p class="text-gray-600">সার্ভার সময়: <span id="server-time">লোড হচ্ছে...</span></p>
+                                <p class="text-gray-600">লোকাল সময়: <span id="local-time">লোড হচ্ছে...</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Contact Details -->
+    <div id="contact-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">কন্টাক্ট ডিটেইলস</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div id="contact-details">
+                    <!-- Contact details will be loaded here -->
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-4">স্ট্যাটাস আপডেট</h4>
+                    <div class="flex space-x-4">
+                        <select id="update-status" class="px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="new">নতুন</option>
+                            <option value="contacted">যোগাযোগ করা হয়েছে</option>
+                            <option value="in_progress">প্রসেসিং</option>
+                            <option value="completed">সম্পন্ন</option>
+                            <option value="cancelled">বাতিল</option>
+                        </select>
+                        <button id="save-status" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            সেভ করুন
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
+        <div class="bg-gray-800 text-white px-6 py-4 rounded-lg shadow-lg max-w-sm">
+            <div class="flex items-center">
+                <i id="toast-icon" class="fas fa-info-circle mr-3"></i>
+                <div>
+                    <p id="toast-message" class="font-medium"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'https://landingpro-backend.onrender.com';
+        let currentToken = null;
+        let currentAdmin = null;
+        let currentPage = 1;
+        let currentLimit = 10;
+        let currentFilters = {};
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMessage.textContent = message;
+            
+            // Set icon based on type
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle',
+                warning: 'fa-exclamation-triangle'
+            };
+            
+            toastIcon.className = `fas ${icons[type] || 'fa-info-circle'} mr-3`;
+            
+            // Show toast
+            toast.classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Login Function
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('login-btn');
+            const errorDiv = document.getElementById('login-error');
+            
+            // Show loading
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
+            loginBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Save token and admin data
+                    currentToken = data.token;
+                    currentAdmin = data.admin;
+                    
+                    // Save to localStorage if remember me is checked
+                    if (document.getElementById('remember').checked) {
+                        localStorage.setItem('adminToken', currentToken);
+                        localStorage.setItem('adminData', JSON.stringify(currentAdmin));
+                    }
+                    
+                    // Switch to dashboard
+                    document.getElementById('login-page').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    
+                    // Initialize dashboard
+                    initDashboard();
+                    showToast('সফলভাবে লগইন করা হয়েছে!', 'success');
+                } else {
+                    throw new Error(data.error || 'লগইন ব্যর্থ হয়েছে');
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                showToast(error.message, 'error');
+            } finally {
+                // Reset button
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>লগইন';
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Logout Function
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Clear stored data
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminData');
+            
+            // Switch to login page
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+            
+            // Clear form
+            document.getElementById('login-form').reset();
+            
+            showToast('সফলভাবে লগআউট করা হয়েছে', 'info');
+        });
+
+        // Initialize Dashboard
+        function initDashboard() {
+            // Set admin info
+            document.getElementById('admin-email').textContent = currentAdmin.email;
+            document.getElementById('last-login').textContent = currentAdmin.lastLogin ? 
+                `শেষ লগইন: ${new Date(currentAdmin.lastLogin).toLocaleString('bn-BD')}` : 
+                'প্রথম লগইন';
+            
+            // Load dashboard data
+            loadDashboardStats();
+            loadRecentContacts();
+            loadContacts();
+            loadAnalytics();
+            updateTime();
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+
+        // Load Dashboard Statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    document.getElementById('total-contacts').textContent = data.totalContacts;
+                    document.getElementById('new-contacts').textContent = data.newContacts;
+                    document.getElementById('processing-contacts').textContent = data.contacted + data.inProgress;
+                    document.getElementById('completed-contacts').textContent = data.completed;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load Recent Contacts
+        async function loadRecentContacts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/contacts?limit=5&sortOrder=desc`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const tbody = document.getElementById('recent-contacts');
+                    tbody.innerHTML = '';
+                    
+                    data.contacts.forEach(contact => {
+                        const row = document.createElement('tr');
+                        
+                        const statusColors = {
+                            new: 'bg-blue-100 text-blue-800',
+                            contacted: 'bg-yellow-100 text-yellow-800',
+                            in_progress: 'bg-orange-100 text-orange-800',
+                            completed: 'bg-green-100 text-green-800',
+                            cancelled: 'bg-red-100 text-red-800'
+                        };
+                        
+                        const statusText = {
+                            new: 'নতুন',
+                            contacted: 'যোগাযোগ করা হয়েছে',
+                            in_progress: 'প্রসেসিং',
+                            completed: 'সম্পন্ন',
+                            cancelled: 'বাতিল'
+                        };
+                        
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-medium text-gray-900">${contact.name}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-gray-900">${contact.email}</div>
+                                <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                    ${contact.package || 'N/A'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
+                                    ${statusText[contact.status] || contact.status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${new Date(contact.createdAt).toLocaleDateString('bn-BD')}
+                            </td>
+                        `;
+                        
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading recent contacts:', error);
+            }
+        }
+
+        // Load Contacts with Pagination
+        async function loadContacts(page = 1, filters = {}) {
+            try {
+                const params = new URLSearchParams({
+                    page: page,
+                    limit: currentLimit,
+                    ...filters
+                });
+                
+                const response = await fetch(`${API_BASE_URL}/api/admin/contacts?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const tbody = document.getElementById('contacts-table');
+                    tbody.innerHTML = '';
+                    
+                    data.contacts.forEach(contact => {
+                        const row = document.createElement('tr');
+                        
+                        const statusColors = {
+                            new: 'bg-blue-100 text-blue-800',
+                            contacted: 'bg-yellow-100 text-yellow-800',
+                            in_progress: 'bg-orange-100 text-orange-800',
+                            completed: 'bg-green-100 text-green-800',
+                            cancelled: 'bg-red-100 text-red-800'
+                        };
+                        
+                        const statusText = {
+                            new: 'নতুন',
+                            contacted: 'যোগাযোগ করা হয়েছে',
+                            in_progress: 'প্রসেসিং',
+                            completed: 'সম্পন্ন',
+                            cancelled: 'বাতিল'
+                        };
+                        
+                        row.innerHTML = `
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-gray-900">${contact.name}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-gray-900">${contact.email}</div>
+                                <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                    ${contact.package || 'N/A'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
+                                    ${statusText[contact.status] || contact.status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                ${new Date(contact.createdAt).toLocaleDateString('bn-BD')}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <button onclick="viewContactDetails('${contact._id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="updateContactStatus('${contact._id}', 'completed')" class="text-green-600 hover:text-green-900 mr-3">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button onclick="deleteContact('${contact._id}')" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        
+                        tbody.appendChild(row);
+                    });
+                    
+                    // Update pagination info
+                    document.getElementById('page-start').textContent = ((page - 1) * currentLimit) + 1;
+                    document.getElementById('page-end').textContent = Math.min(page * currentLimit, data.pagination.total);
+                    document.getElementById('total-entries').textContent = data.pagination.total;
+                    document.getElementById('current-page').textContent = page;
+                    
+                    // Update pagination buttons
+                    document.getElementById('prev-page').disabled = page <= 1;
+                    document.getElementById('next-page').disabled = page >= data.pagination.totalPages;
+                    
+                    currentPage = page;
+                }
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                showToast('ডেটা লোড করতে সমস্যা হয়েছে', 'error');
+            }
+        }
+
+        // View Contact Details
+        async function viewContactDetails(contactId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const contact = await response.json();
+                    
+                    const detailsDiv = document.getElementById('contact-details');
+                    const statusSelect = document.getElementById('update-status');
+                    
+                    const statusText = {
+                        new: 'নতুন',
+                        contacted: 'যোগাযোগ করা হয়েছে',
+                        in_progress: 'প্রসেসিং',
+                        completed: 'সম্পন্ন',
+                        cancelled: 'বাতিল'
+                    };
+                    
+                    detailsDiv.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-gray-600 text-sm">নাম</p>
+                                <p class="font-medium text-gray-800">${contact.name}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 text-sm">ইমেইল</p>
+                                <p class="font-medium text-gray-800">${contact.email}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 text-sm">ফোন</p>
+                                <p class="font-medium text-gray-800">${contact.phone || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 text-sm">প্যাকেজ</p>
+                                <p class="font-medium text-gray-800">${contact.package || 'N/A'}</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <p class="text-gray-600 text-sm">বর্তমান স্ট্যাটাস</p>
+                                <p class="font-medium text-gray-800">${statusText[contact.status] || contact.status}</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <p class="text-gray-600 text-sm">মেসেজ</p>
+                                <p class="font-medium text-gray-800 bg-gray-50 p-4 rounded-lg mt-2">${contact.message}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 text-sm">সাবমিশন তারিখ</p>
+                                <p class="font-medium text-gray-800">${new Date(contact.createdAt).toLocaleString('bn-BD')}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 text-sm">আপডেট তারিখ</p>
+                                <p class="font-medium text-gray-800">${new Date(contact.updatedAt).toLocaleString('bn-BD')}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    statusSelect.value = contact.status;
+                    
+                    // Store current contact ID for status update
+                    statusSelect.dataset.contactId = contactId;
+                    
+                    // Show modal
+                    document.getElementById('contact-modal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading contact details:', error);
+                showToast('ডেটা লোড করতে সমস্যা হয়েছে', 'error');
+            }
+        }
+
+        // Update Contact Status
+        async function updateContactStatus(contactId, status) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                });
+                
+                if (response.ok) {
+                    showToast('স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে', 'success');
+                    loadContacts(currentPage, currentFilters);
+                    loadDashboardStats();
+                    loadRecentContacts();
+                }
+            } catch (error) {
+                console.error('Error updating contact:', error);
+                showToast('স্ট্যাটাস আপডেট করতে সমস্যা হয়েছে', 'error');
+            }
+        }
+
+        // Delete Contact
+        async function deleteContact(contactId) {
+            if (!confirm('আপনি কি নিশ্চিত যে আপনি এই কন্টাক্টটি ডিলিট করতে চান?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showToast('কন্টাক্ট সফলভাবে ডিলিট করা হয়েছে', 'success');
+                    loadContacts(currentPage, currentFilters);
+                    loadDashboardStats();
+                    loadRecentContacts();
+                }
+            } catch (error) {
+                console.error('Error deleting contact:', error);
+                showToast('কন্টাক্ট ডিলিট করতে সমস্যা হয়েছে', 'error');
+            }
+        }
+
+        // Load Analytics
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Package Distribution
+                    const packageChart = document.getElementById('package-chart');
+                    if (data.packageStats && data.packageStats.length > 0) {
+                        packageChart.innerHTML = '';
+                        data.packageStats.forEach(item => {
+                            const percentage = (item.count / data.totalContacts * 100).toFixed(1);
+                            const color = item._id === 'প্রিমিয়াম' ? 'bg-purple-600' : 
+                                         item._id === 'স্ট্যান্ডার্ড' ? 'bg-blue-600' : 
+                                         item._id === 'বেস্ট সেলার' ? 'bg-green-600' : 'bg-gray-600';
+                            
+                            const bar = document.createElement('div');
+                            bar.className = 'mb-4';
+                            bar.innerHTML = `
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">${item._id || 'N/A'}</span>
+                                    <span class="font-medium">${item.count} (${percentage}%)</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full ${color} rounded-full" style="width: ${percentage}%"></div>
+                                </div>
+                            `;
+                            packageChart.appendChild(bar);
+                        });
+                    } else {
+                        packageChart.innerHTML = '<p class="text-gray-500">কোন ডেটা পাওয়া যায়নি</p>';
+                    }
+                    
+                    // Status Distribution
+                    const statusChart = document.getElementById('status-chart');
+                    const statusData = [
+                        { label: 'নতুন', count: data.newContacts, color: 'bg-blue-600' },
+                        { label: 'যোগাযোগ', count: data.contacted, color: 'bg-yellow-600' },
+                        { label: 'প্রসেসিং', count: data.inProgress, color: 'bg-orange-600' },
+                        { label: 'সম্পন্ন', count: data.completed, color: 'bg-green-600' },
+                        { label: 'বাতিল', count: data.cancelled || 0, color: 'bg-red-600' }
+                    ];
+                    
+                    if (data.totalContacts > 0) {
+                        statusChart.innerHTML = '';
+                        statusData.forEach(item => {
+                            const percentage = (item.count / data.totalContacts * 100).toFixed(1);
+                            
+                            const bar = document.createElement('div');
+                            bar.className = 'mb-4';
+                            bar.innerHTML = `
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">${item.label}</span>
+                                    <span class="font-medium">${item.count} (${percentage}%)</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full ${item.color} rounded-full" style="width: ${percentage}%"></div>
+                                </div>
+                            `;
+                            statusChart.appendChild(bar);
+                        });
+                    } else {
+                        statusChart.innerHTML = '<p class="text-gray-500">কোন ডেটা পাওয়া যায়নি</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        // Update Time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('local-time').textContent = now.toLocaleString('bn-BD');
+            
+            // Update server time (assuming same timezone for demo)
+            document.getElementById('server-time').textContent = now.toLocaleString('bn-BD');
+            
+            // Update every minute
+            setTimeout(updateTime, 60000);
+        }
+
+        // Test API Connection
+        document.getElementById('test-api').addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                const data = await response.json();
+                
+                const statusElement = document.getElementById('api-status');
+                const statusText = document.getElementById('api-status-text');
+                
+                if (response.ok && data.status === 'healthy') {
+                    statusElement.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+                    statusText.textContent = 'API কানেক্টেড - সার্ভার সচল';
+                    showToast('API কানেকশন সফল!', 'success');
+                } else {
+                    statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+                    statusText.textContent = 'API ডিসকানেক্টেড';
+                    showToast('API কানেকশন ব্যর্থ!', 'error');
+                }
+            } catch (error) {
+                const statusElement = document.getElementById('api-status');
+                const statusText = document.getElementById('api-status-text');
+                
+                statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+                statusText.textContent = 'API ডিসকানেক্টেড';
+                showToast('API কানেকশন ব্যর্থ!', 'error');
+            }
+        });
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            document.getElementById('menu-toggle').addEventListener('click', () => {
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+            
+            // Section navigation
+            document.querySelectorAll('[data-section]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Hide all sections
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.classList.add('hidden');
+                    });
+                    
+                    // Remove active class from all links
+                    document.querySelectorAll('[data-section]').forEach(l => {
+                        l.classList.remove('active-section');
+                    });
+                    
+                    // Show selected section
+                    const sectionId = link.dataset.section;
+                    document.getElementById(sectionId).classList.remove('hidden');
+                    link.classList.add('active-section');
+                    
+                    // Close mobile menu
+                    document.querySelector('.sidebar').classList.remove('active');
+                    
+                    // Load section specific data
+                    if (sectionId === 'contacts') {
+                        loadContacts(currentPage, currentFilters);
+                    } else if (sectionId === 'analytics') {
+                        loadAnalytics();
+                    }
+                });
+            });
+            
+            // User dropdown menu
+            document.getElementById('user-menu').addEventListener('click', () => {
+                document.getElementById('dropdown-menu').classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#user-menu')) {
+                    document.getElementById('dropdown-menu').classList.add('hidden');
+                }
+            });
+            
+            // Contact modal
+            document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('contact-modal').classList.add('hidden');
+            });
+            
+            // Save status button
+            document.getElementById('save-status').addEventListener('click', () => {
+                const statusSelect = document.getElementById('update-status');
+                const contactId = statusSelect.dataset.contactId;
+                const status = statusSelect.value;
+                
+                if (contactId) {
+                    updateContactStatus(contactId, status);
+                    document.getElementById('contact-modal').classList.add('hidden');
+                }
+            });
+            
+            // Apply filters
+            document.getElementById('apply-filters').addEventListener('click', () => {
+                const filters = {};
+                
+                const statusFilter = document.getElementById('status-filter').value;
+                if (statusFilter !== 'all') {
+                    filters.status = statusFilter;
+                }
+                
+                const packageFilter = document.getElementById('package-filter').value;
+                if (packageFilter !== 'all') {
+                    filters.package = packageFilter;
+                }
+                
+                const searchFilter = document.getElementById('search-filter').value;
+                if (searchFilter) {
+                    filters.search = searchFilter;
+                }
+                
+                currentFilters = filters;
+                currentPage = 1;
+                loadContacts(currentPage, filters);
+            });
+            
+            // Pagination
+            document.getElementById('prev-page').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    loadContacts(currentPage - 1, currentFilters);
+                }
+            });
+            
+            document.getElementById('next-page').addEventListener('click', () => {
+                loadContacts(currentPage + 1, currentFilters);
+            });
+        }
+
+        // Auto login from localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('adminToken');
+            const savedAdmin = localStorage.getItem('adminData');
+            
+            if (savedToken && savedAdmin) {
+                try {
+                    currentToken = savedToken;
+                    currentAdmin = JSON.parse(savedAdmin);
+                    
+                    // Verify token is still valid
+                    fetch(`${API_BASE_URL}/api/admin/stats`, {
+                        headers: {
+                            'Authorization': `Bearer ${currentToken}`
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            // Switch to dashboard
+                            document.getElementById('login-page').classList.add('hidden');
+                            document.getElementById('dashboard').classList.remove('hidden');
+                            
+                            // Initialize dashboard
+                            initDashboard();
+                            showToast('স্বয়ংক্রিয়ভাবে লগইন করা হয়েছে', 'success');
+                        } else {
+                            // Clear invalid token
+                            localStorage.removeItem('adminToken');
+                            localStorage.removeItem('adminData');
+                        }
+                    }).catch(() => {
+                        // Clear invalid token
+                        localStorage.removeItem('adminToken');
+                        localStorage.removeItem('adminData');
+                    });
+                } catch (error) {
+                    console.error('Auto login error:', error);
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminData');
+                }
+            }
+            
+            // Test API connection on load
+            fetch(`${API_BASE_URL}/api/health`)
+                .then(response => {
+                    const statusElement = document.getElementById('api-status');
+                    const statusText = document.getElementById('api-status-text');
+                    
+                    if (response.ok) {
+                        statusElement.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+                        statusText.textContent = 'API কানেক্টেড';
+                    } else {
+                        statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+                        statusText.textContent = 'API ডিসকানেক্টেড';
+                    }
+                })
+                .catch(() => {
+                    const statusElement = document.getElementById('api-status');
+                    const statusText = document.getElementById('api-status-text');
+                    
+                    statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+                    statusText.textContent = 'API ডিসকানেক্টেড';
+                });
+        });
+    </script>
+</body>
+</html>

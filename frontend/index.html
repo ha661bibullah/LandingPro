@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ল্যান্ডিংপ্রো | পূর্ণ স্ট্যাক ল্যান্ডিং পেজ ডেভেলপমেন্ট</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        .tech-icon {
+            transition: transform 0.3s ease;
+        }
+        .tech-icon:hover {
+            transform: translateY(-5px);
+        }
+        .project-card {
+            transition: all 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- নেভিগেশন বার -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-rocket text-white text-lg"></i>
+                </div>
+                <span class="ml-3 text-xl font-bold text-gray-800">ল্যান্ডিং<span class="text-blue-600">প্রো</span></span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="#services" class="text-gray-700 hover:text-blue-600 font-medium">সার্ভিস</a>
+                <a href="#technologies" class="text-gray-700 hover:text-blue-600 font-medium">টেকনোলজি</a>
+                <a href="#portfolio" class="text-gray-700 hover:text-blue-600 font-medium">সফল প্রকল্প</a>
+                <a href="#process" class="text-gray-700 hover:text-blue-600 font-medium">প্রক্রিয়া</a>
+                <a href="#pricing" class="text-gray-700 hover:text-blue-600 font-medium">মূল্য</a>
+                <a href="#contact" class="text-gray-700 hover:text-blue-600 font-medium">যোগাযোগ</a>
+            </div>
+            
+            <button onclick="scrollToContact()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-5 py-2 rounded-lg font-medium transition duration-300 shadow-md hover:shadow-lg">
+                <i class="fas fa-paper-plane mr-2"></i>চলুন কথা বলি
+            </button>
+            
+            <!-- মোবাইল মেনু বাটন -->
+            <button id="mobile-menu-button" class="md:hidden text-gray-700">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- মোবাইল মেনু -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white px-4 py-3 shadow-lg">
+            <a href="#services" class="block py-2 text-gray-700 hover:text-blue-600">সার্ভিস</a>
+            <a href="#technologies" class="block py-2 text-gray-700 hover:text-blue-600">টেকনোলজি</a>
+            <a href="#portfolio" class="block py-2 text-gray-700 hover:text-blue-600">সফল প্রকল্প</a>
+            <a href="#process" class="block py-2 text-gray-700 hover:text-blue-600">প্রক্রিয়া</a>
+            <a href="#pricing" class="block py-2 text-gray-700 hover:text-blue-600">মূল্য</a>
+            <a href="#contact" class="block py-2 text-gray-700 hover:text-blue-600">যোগাযোগ</a>
+        </div>
+    </nav>
+
+    <!-- হিরো সেকশন -->
+    <section class="py-12 md:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium mb-4">
+                        <i class="fas fa-rocket mr-2"></i>আপনার ব্যবসার ডিজিটাল পরিচয় তৈরি করুন
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">পূর্ণ স্ট্যাক</span> ল্যান্ডিং পেজ ডেভেলপমেন্ট
+                    </h1>
+                    <p class="text-gray-600 text-lg mt-6 mb-8">
+                        <strong>ল্যান্ডিংপ্রো</strong> তৈরি করে উচ্চ-কনভার্শন ল্যান্ডিং পেজ <strong>HTML, Tailwind CSS, JavaScript, Node.js, Express.js</strong> এবং অন্যান্য আধুনিক টেকনোলজি ব্যবহার করে। আপনার ব্যবসার জন্য তৈরি করি দ্রুত, সুরক্ষিত এবং স্কেলেবল সমাধান।
+                    </p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button onclick="scrollToContact()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-medium text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                            <i class="fas fa-calendar-check mr-2"></i>ফ্রি কনসাল্টেশন বুক করুন
+                        </button>
+                        <button onclick="scrollToPortfolio()" class="bg-white hover:bg-gray-50 text-blue-600 border-2 border-blue-600 px-6 py-3 rounded-lg font-medium text-lg transition duration-300 shadow-md hover:shadow-lg">
+                            <i class="fas fa-images mr-2"></i>আমার কাজ দেখুন
+                        </button>
+                    </div>
+                    
+                    <div class="mt-10 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700">১০০% রেসপনসিভ</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700">সার্চ ইঞ্জিন অপ্টিমাইজড</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700">ফাস্ট লোডিং</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative">
+                        <div class="bg-white p-2 rounded-2xl shadow-2xl border border-gray-200">
+                            <div class="bg-gray-800 h-8 rounded-t-lg flex items-center px-3 justify-between">
+                                <div class="flex space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <span class="text-gray-300 text-sm font-mono">landing-page.html</span>
+                            </div>
+                            <div class="p-4 bg-gradient-to-br from-gray-900 to-gray-800 rounded-b-lg">
+                                <div class="text-green-400 font-mono text-sm overflow-x-auto">
+                                    <div class="mb-2"><span class="text-purple-400">&lt;div</span> <span class="text-yellow-300">class=</span><span class="text-green-300">"container mx-auto"</span><span class="text-purple-400">&gt;</span></div>
+                                    <div class="ml-4 mb-2"><span class="text-purple-400">&lt;h1</span> <span class="text-yellow-300">class=</span><span class="text-green-300">"text-4xl font-bold"</span><span class="text-purple-400">&gt;</span></div>
+                                    <div class="ml-8 text-white">আপনার ব্যবসার ল্যান্ডিং পেজ</div>
+                                    <div class="ml-4 mb-4"><span class="text-purple-400">&lt;/h1&gt;</span></div>
+                                    <div class="ml-4 mb-2"><span class="text-purple-400">&lt;button</span> <span class="text-yellow-300">class=</span><span class="text-green-300">"bg-blue-600 text-white px-6 py-3 rounded-lg"</span><span class="text-purple-400">&gt;</span></div>
+                                    <div class="ml-8 text-white">এখনই শুরু করুন</div>
+                                    <div class="ml-4"><span class="text-purple-400">&lt;/button&gt;</span></div>
+                                    <div><span class="text-purple-400">&lt;/div&gt;</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ফ্লোটিং টেক আইকন -->
+                        <div class="absolute -top-4 -right-4 bg-white p-3 rounded-full shadow-lg">
+                            <i class="fab fa-html5 text-orange-500 text-2xl"></i>
+                        </div>
+                        <div class="absolute -bottom-4 -left-4 bg-white p-3 rounded-full shadow-lg">
+                            <i class="fab fa-js-square text-yellow-500 text-2xl"></i>
+                        </div>
+                        <div class="absolute top-1/2 -right-6 bg-white p-3 rounded-full shadow-lg">
+                            <i class="fab fa-node-js text-green-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- সার্ভিস সেকশন -->
+    <section id="services" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">ল্যান্ডিংপ্রো এর স্পেশালাইজড সার্ভিস</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">আপনার ব্যবসার প্রয়োজন অনুযায়ী কাস্টমাইজড ল্যান্ডিং পেজ ডেভেলপমেন্ট</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- সার্ভিস ১ -->
+                <div class="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border border-blue-100 hover:shadow-xl transition duration-300 project-card">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 w-16 h-16 rounded-xl flex items-center justify-center mb-6 shadow-md">
+                        <i class="fas fa-layer-group text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">ফ্রন্টএন্ড ডেভেলপমেন্ট</h3>
+                    <p class="text-gray-600 mb-6">আধুনিক ও ইউজার ফ্রেন্ডলি ইন্টারফেস তৈরি করি HTML5, Tailwind CSS এবং Vanilla JavaScript ব্যবহার করে।</p>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>রেসপনসিভ ও মোবাইল ফ্রেন্ডলি</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>ক্রস-ব্রাউজার কম্প্যাটিবিলিটি</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>ইন্টারেক্টিভ UI কম্পোনেন্ট</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- সার্ভিস ২ -->
+                <div class="bg-gradient-to-br from-purple-50 to-white p-8 rounded-2xl border border-purple-100 hover:shadow-xl transition duration-300 project-card">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 w-16 h-16 rounded-xl flex items-center justify-center mb-6 shadow-md">
+                        <i class="fas fa-server text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">ব্যাকএন্ড ডেভেলপমেন্ট</h3>
+                    <p class="text-gray-600 mb-6">Node.js ও Express.js ব্যবহার করে তৈরি করি স্কেলেবল ও সিকিউর ব্যাকএন্ড সিস্টেম, REST API এবং ডাটাবেজ ইন্টিগ্রেশন।</p>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>RESTful API ডেভেলপমেন্ট</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>ডাটাবেজ ডিজাইন ও ইন্টিগ্রেশন</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>অথেন্টিকেশন ও অথরাইজেশন</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- সার্ভিস ৩ -->
+                <div class="bg-gradient-to-br from-green-50 to-white p-8 rounded-2xl border border-green-100 hover:shadow-xl transition duration-300 project-card">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 w-16 h-16 rounded-xl flex items-center justify-center mb-6 shadow-md">
+                        <i class="fas fa-tools text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">ফুল স্ট্যাক ইন্টিগ্রেশন</h3>
+                    <p class="text-gray-600 mb-6">ফ্রন্টএন্ড ও ব্যাকএন্ড এর মধ্যে সিমলেস ইন্টিগ্রেশন, ডেপ্লয়মেন্ট ও মেইনটেনেন্স সার্ভিস প্রদান করি।</p>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>ফ্রন্টএন্ড-ব্যাকএন্ড ইন্টিগ্রেশন</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>সার্ভার ডেপ্লয়মেন্ট ও হোস্টিং</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>কন্টিনিউয়াস মেইনটেনেন্স</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- টেকনোলজি স্ট্যাক -->
+    <section id="technologies" class="py-16 bg-gradient-to-r from-gray-50 to-blue-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">ল্যান্ডিংপ্রো টেকনোলজি স্ট্যাক</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">আমরা ব্যবহার করি আধুনিক ও জনপ্রিয় টেকনোলজি যা শিল্পমান অনুযায়ী</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-6">
+                <!-- টেক ১ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center tech-icon">
+                    <i class="fab fa-html5 text-5xl text-orange-500 mb-4"></i>
+                    <h4 class="font-bold text-gray-800">HTML5</h4>
+                    <p class="text-gray-600 text-sm mt-2">সেমেন্টিক মার্কআপ</p>
+                </div>
+                
+                <!-- টেক ২ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center tech-icon">
+                    <i class="fab fa-css3-alt text-5xl text-blue-500 mb-4"></i>
+                    <h4 class="font-bold text-gray-800">CSS3</h4>
+                    <p class="text-gray-600 text-sm mt-2">স্টাইলিং ও এনিমেশন</p>
+                </div>
+                
+                <!-- টেক ৩ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center tech-icon">
+                    <div class="text-5xl mb-4">
+                        <span class="text-blue-400 font-bold">TW</span>
+                    </div>
+                    <h4 class="font-bold text-gray-800">Tailwind CSS</h4>
+                    <p class="text-gray-600 text-sm mt-2">উটিলিটি-ফার্স্ট CSS</p>
+                </div>
+                
+                <!-- টেক ৪ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center tech-icon">
+                    <i class="fab fa-js-square text-5xl text-yellow-500 mb-4"></i>
+                    <h4 class="font-bold text-gray-800">JavaScript</h4>
+                    <p class="text-gray-600 text-sm mt-2">ক্লায়েন্ট-সাইড লজিক</p>
+                </div>
+                
+                <!-- টেক ৫ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center tech-icon">
+                    <i class="fab fa-node-js text-5xl text-green-600 mb-4"></i>
+                    <h4 class="font-bold text-gray-800">Node.js</h4>
+                    <p class="text-gray-600 text-sm mt-2">ব্যাকএন্ড রানটাইম</p>
+                </div>
+                
+                <!-- টেক ৬ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center tech-icon">
+                    <i class="fas fa-sitemap text-5xl text-gray-700 mb-4"></i>
+                    <h4 class="font-bold text-gray-800">Express.js</h4>
+                    <p class="text-gray-600 text-sm mt-2">ওয়েব অ্যাপ্লিকেশন ফ্রেমওয়ার্ক</p>
+                </div>
+            </div>
+            
+            <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
+                    <div class="text-2xl font-bold text-blue-600">MongoDB</div>
+                    <p class="text-gray-600 text-sm mt-1">নোSQL ডাটাবেজ</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
+                    <div class="text-2xl font-bold text-blue-800">PostgreSQL</div>
+                    <p class="text-gray-600 text-sm mt-1">রিলেশনাল ডাটাবেজ</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
+                    <div class="text-2xl font-bold text-red-500">Git</div>
+                    <p class="text-gray-600 text-sm mt-1">ভার্সন কন্ট্রোল</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
+                    <div class="text-2xl font-bold text-orange-500">AWS/Heroku</div>
+                    <p class="text-gray-600 text-sm mt-1">ক্লাউড ডেপ্লয়মেন্ট</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- আমার সফল প্রকল্প সমূহ -->
+    <section id="portfolio" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">ল্যান্ডিংপ্রো এর সফল প্রকল্প</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">আমরা তৈরি করেছি বিভিন্ন ধরনের ব্যবসার জন্য ল্যান্ডিং পেজ</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- প্রজেক্ট ১ -->
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 project-card">
+                    <div class="h-48 bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                        <i class="fas fa-shopping-cart text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ইকমার্স ল্যান্ডিং পেজ</h3>
+                        <p class="text-gray-600 mb-4">পণ্য প্রদর্শন, ক্যাটালগ এবং চেকআউট সিস্টেম সহ একটি সম্পূর্ণ ইকমার্স ল্যান্ডিং পেজ।</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">HTML</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">Tailwind CSS</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Node.js</span>
+                            <span class="bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-full">Express.js</span>
+                        </div>
+                        <a href="https://example-ecommerce.com" target="_blank" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <i class="fas fa-external-link-alt mr-2"></i>লাইভ দেখুন →
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- প্রজেক্ট ২ -->
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 project-card">
+                    <div class="h-48 bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">এডুটেক প্ল্যাটফর্ম</h3>
+                        <p class="text-gray-600 mb-4">কোর্স লিস্টিং, স্টুডেন্ট ড্যাশবোর্ড এবং পেমেন্ট ইন্টিগ্রেশন সহ শিক্ষামূলক প্ল্যাটফর্ম।</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">HTML</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">Tailwind CSS</span>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full">JavaScript</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">MongoDB</span>
+                        </div>
+                        <a href="https://example-edtech.com" target="_blank" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <i class="fas fa-external-link-alt mr-2"></i>লাইভ দেখুন →
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- প্রজেক্ট ৩ -->
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 project-card">
+                    <div class="h-48 bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+                        <i class="fas fa-briefcase-medical text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">হেলথকেয়ার সার্ভিস</h3>
+                        <p class="text-gray-600 mb-4">ডাক্তার অ্যাপয়েন্টমেন্ট, অনলাইন কনসাল্টেশন এবং মেডিকেল সার্ভিস বুকিং সিস্টেম।</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">HTML</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">CSS</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Express.js</span>
+                            <span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full">REST API</span>
+                        </div>
+                        <a href="https://example-healthcare.com" target="_blank" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <i class="fas fa-external-link-alt mr-2"></i>লাইভ দেখুন →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- আরও প্রজেক্ট -->
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- প্রজেক্ট ৪ -->
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 project-card">
+                    <div class="h-48 bg-gradient-to-r from-yellow-500 to-yellow-600 flex items-center justify-center">
+                        <i class="fas fa-utensils text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ফুড ডেলিভারি সার্ভিস</h3>
+                        <p class="text-gray-600 mb-4">অর্ডার ট্র্যাকিং, মেনু ম্যানেজমেন্ট এবং রিয়েলটাইম আপডেট সহ ফুড ডেলিভারি ওয়েবসাইট।</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">HTML</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">Tailwind CSS</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Node.js</span>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full">Socket.io</span>
+                        </div>
+                        <a href="https://example-food.com" target="_blank" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <i class="fas fa-external-link-alt mr-2"></i>লাইভ দেখুন →
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- প্রজেক্ট ৫ -->
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 project-card">
+                    <div class="h-48 bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                        <i class="fas fa-plane text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ট্রাভেল এজেন্সি</h3>
+                        <p class="text-gray-600 mb-4">প্যাকেজ বুকিং, হোটেল রিজার্ভেশন এবং ট্রিপ প্ল্যানিং সহ ট্রাভেল এজেন্সি ওয়েবসাইট।</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">HTML</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">Tailwind CSS</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Express.js</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">REST API</span>
+                        </div>
+                        <a href="https://example-travel.com" target="_blank" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <i class="fas fa-external-link-alt mr-2"></i>লাইভ দেখুন →
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- প্রজেক্ট ৬ -->
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 project-card">
+                    <div class="h-48 bg-gradient-to-r from-indigo-500 to-indigo-600 flex items-center justify-center">
+                        <i class="fas fa-hands-helping text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">নন-প্রফিট সংস্থা</h3>
+                        <p class="text-gray-600 mb-4">ডোনেশন সিস্টেম, ইভেন্ট ম্যানেজমেন্ট এবং ভলান্টিয়ার রেজিস্ট্রেশন সহ নন-প্রফিট ওয়েবসাইট।</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">HTML</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">CSS</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Node.js</span>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full">JavaScript</span>
+                        </div>
+                        <a href="https://example-nonprofit.com" target="_blank" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <i class="fas fa-external-link-alt mr-2"></i>লাইভ দেখুন →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- কাজের প্রক্রিয়া -->
+    <section id="process" class="py-16 bg-gradient-to-r from-gray-50 to-blue-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">ল্যান্ডিংপ্রো কাজের প্রক্রিয়া</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">একটি সফল ল্যান্ডিং পেজ তৈরি করার জন্য আমরা অনুসরণ করি ৬টি ধাপ</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
+                <!-- ধাপ ১ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center">
+                    <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">১</div>
+                    <h4 class="font-bold text-gray-800 mb-2">প্রয়োজন বিশ্লেষণ</h4>
+                    <p class="text-gray-600 text-sm">আপনার ব্যবসার লক্ষ্য ও টার্গেট অডিয়েন্স বুঝে নেওয়া</p>
+                </div>
+                
+                <!-- ধাপ ২ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center">
+                    <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">২</div>
+                    <h4 class="font-bold text-gray-800 mb-2">ওয়্যারফ্রেমিং</h4>
+                    <p class="text-gray-600 text-sm">লেআউট ও ইউজার ফ্লো ডিজাইন</p>
+                </div>
+                
+                <!-- ধাপ ৩ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center">
+                    <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">৩</div>
+                    <h4 class="font-bold text-gray-800 mb-2">UI/UX ডিজাইন</h4>
+                    <p class="text-gray-600 text-sm">Tailwind CSS ব্যবহার করে ভিজুয়াল ডিজাইন</p>
+                </div>
+                
+                <!-- ধাপ ৪ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center">
+                    <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">৪</div>
+                    <h4 class="font-bold text-gray-800 mb-2">ফ্রন্টএন্ড ডেভেলপমেন্ট</h4>
+                    <p class="text-gray-600 text-sm">HTML, CSS, JavaScript দিয়ে ইন্টারেক্টিভ UI তৈরি</p>
+                </div>
+                
+                <!-- ধাপ ৫ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center">
+                    <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">৫</div>
+                    <h4 class="font-bold text-gray-800 mb-2">ব্যাকএন্ড ডেভেলপমেন্ট</h4>
+                    <p class="text-gray-600 text-sm">Node.js ও Express.js ব্যবহার করে লজিক তৈরি</p>
+                </div>
+                
+                <!-- ধাপ ৬ -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center">
+                    <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">৬</div>
+                    <h4 class="font-bold text-gray-800 mb-2">টেস্টিং ও ডেলিভারি</h4>
+                    <p class="text-gray-600 text-sm">কোয়ালিটি চেক ও লাইভ সার্ভারে ডেপ্লয়</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- মূল্য নির্ধারণ -->
+    <section id="pricing" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">ল্যান্ডিংপ্রো মূল্য নির্ধারণ</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">আপনার প্রয়োজন ও বাজেট অনুযায়ী বিভিন্ন প্যাকেজ</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- প্যাকেজ ১ -->
+                <div class="bg-gradient-to-b from-gray-50 to-white rounded-2xl p-8 border border-gray-300 shadow-lg">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">বেস্ট সেলার</h3>
+                        <div class="flex justify-center items-baseline">
+                            <span class="text-4xl font-bold text-gray-800">৳ ২,৯৯৯</span>
+                            <span class="text-gray-600 ml-2">/ প্রজেক্ট</span>
+                        </div>
+                        <p class="text-gray-600 mt-2">প্রারম্ভিক ব্যবসার জন্য</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>১ পেজ ল্যান্ডিং পেজ</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>HTML + Tailwind CSS</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>বেসিক JavaScript</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>রেসপনসিভ ডিজাইন</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>কন্টাক্ট ফর্ম</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>৭ দিন সাপোর্ট</span>
+                        </li>
+                    </ul>
+                    
+                    <button onclick="selectPackage('বেস্ট সেলার')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 rounded-lg transition duration-300">
+                        প্যাকেজ নির্বাচন করুন
+                    </button>
+                </div>
+                
+                <!-- প্যাকেজ ২ (প্রধান) -->
+                <div class="bg-gradient-to-b from-blue-50 to-white rounded-2xl p-8 border-2 border-blue-500 shadow-xl relative">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                        সর্বাধিক জনপ্রিয়
+                    </div>
+                    
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">স্ট্যান্ডার্ড</h3>
+                        <div class="flex justify-center items-baseline">
+                            <span class="text-4xl font-bold text-gray-800">৳ ১২,০০০</span>
+                            <span class="text-gray-600 ml-2">/ প্রজেক্ট</span>
+                        </div>
+                        <p class="text-gray-600 mt-2">ফুল ফাংশনাল ল্যান্ডিং পেজের জন্য</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>৩-৫ পেজ ল্যান্ডিং পেজ</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>HTML + Tailwind CSS + JS</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>Node.js + Express.js ব্যাকএন্ড</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>বেসিক REST API</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>ডাটাবেজ কানেকশন (MongoDB)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>ফর্ম হ্যান্ডলিং ও ভ্যালিডেশন</span>
+                        </li>
+                    </ul>
+                    
+                    <button onclick="selectPackage('স্ট্যান্ডার্ড')" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 rounded-lg transition duration-300 shadow-lg hover:shadow-xl">
+                        প্যাকেজ নির্বাচন করুন
+                    </button>
+                </div>
+                
+                <!-- প্যাকেজ ৩ -->
+                <div class="bg-gradient-to-b from-purple-50 to-white rounded-2xl p-8 border border-purple-300 shadow-lg">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">প্রিমিয়াম</h3>
+                        <div class="flex justify-center items-baseline">
+                            <span class="text-4xl font-bold text-gray-800">৳ ২৫,০০০</span>
+                            <span class="text-gray-600 ml-2">/ প্রজেক্ট</span>
+                        </div>
+                        <p class="text-gray-600 mt-2">কাস্টম ও জটিল প্রকল্পের জন্য</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>৫+ পেজ ল্যান্ডিং পেজ</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>সম্পূর্ণ ফুল স্ট্যাক ডেভেলপমেন্ট</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>এডভান্সড API ডেভেলপমেন্ট</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>মাল্টিপল ডাটাবেজ ইন্টিগ্রেশন</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>অ্যাডমিন প্যানেল</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>৩ মাস সাপোর্ট ও মেইনটেনেন্স</span>
+                        </li>
+                    </ul>
+                    
+                    <button onclick="selectPackage('প্রিমিয়াম')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg transition duration-300">
+                        প্যাকেজ নির্বাচন করুন
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- যোগাযোগ ফর্ম -->
+    <section id="contact" class="py-16 bg-gradient-to-r from-blue-600 to-purple-700">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div class="md:flex">
+                        <div class="md:w-2/5 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 md:p-12">
+                            <h3 class="text-3xl font-bold text-gray-800 mb-6">আজই শুরু করুন আপনার প্রজেক্ট</h3>
+                            <p class="text-gray-700 mb-8">আপনার ব্যবসার জন্য একটি পেশাদার ল্যান্ডিং পেজ তৈরি করতে এখনই যোগাযোগ করুন। আমরা ২৪ ঘণ্টার মধ্যে রিপ্লাই দিব।</p>
+                            
+                            <div class="space-y-6">
+                                <div class="flex items-start">
+                                    <div class="bg-white p-3 rounded-xl shadow-sm mr-4">
+                                        <i class="fas fa-phone text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-800">ফোন নম্বর</h4>
+                                        <p class="text-gray-700">+৮৮০ ১৩২৬১৯৮৪৫৬</p>
+                                        <p class="text-gray-600 text-sm">ওয়াটসঅ্যাপ এবং টেলিগ্রাম এ উপলব্ধ</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <div class="bg-white p-3 rounded-xl shadow-sm mr-4">
+                                        <i class="fas fa-envelope text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-800">ইমেইল ঠিকানা</h4>
+                                        <p class="text-gray-700">billaharif661@gmail.com</p>
+                                        <p class="text-gray-600 text-sm">২৪ ঘণ্টার মধ্যে রিপ্লাই</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <div class="bg-white p-3 rounded-xl shadow-sm mr-4">
+                                        <i class="fas fa-map-marker-alt text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-800">ঠিকানা</h4>
+                                        <p class="text-gray-700">জামগোড়া, আশুলিয়া, সাভার, ঢাকা, বাংলাদেশ</p>
+                                        <p class="text-gray-600 text-sm">রিমোট ও অনসাইট সার্ভিস</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8 pt-6 border-t border-gray-300">
+                                <h4 class="font-bold text-gray-800 mb-4">সরাসরি যোগাযোগ:</h4>
+                                <div class="flex flex-wrap gap-4">
+                                    <a href="https://wa.me/8801326198456" target="_blank" class="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300 shadow-md hover:shadow-lg flex items-center">
+                                        <i class="fab fa-whatsapp mr-2"></i> WhatsApp
+                                    </a>
+                                    <a href="https://t.me/8801326198456" target="_blank" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition duration-300 shadow-md hover:shadow-lg flex items-center">
+                                        <i class="fab fa-telegram mr-2"></i> Telegram
+                                    </a>
+                                    <a href="mailto:billaharif661@gmail.com" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition duration-300 shadow-md hover:shadow-lg flex items-center">
+                                        <i class="fas fa-envelope mr-2"></i> Email
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="md:w-3/5 p-8 md:p-12">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">আপনার প্রজেক্ট সম্পর্কে বিস্তারিত বলুন</h3>
+                            
+                            <form id="contact-form" onsubmit="submitForm(event)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-gray-700 mb-2" for="name">আপনার নাম *</label>
+                                        <input type="text" id="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="আপনার পুরো নাম">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-700 mb-2" for="email">ইমেইল ঠিকানা *</label>
+                                        <input type="email" id="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="আপনার ইমেইল ঠিকানা">
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <label class="block text-gray-700 mb-2" for="phone">ফোন নম্বর</label>
+                                    <input type="tel" id="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+৮৮০ ১৩২৬১৯৮৪৫৬">
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <label class="block text-gray-700 mb-2" for="package">পছন্দের প্যাকেজ</label>
+                                    <select id="package" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">প্যাকেজ নির্বাচন করুন</option>
+                                        <option value="বেস্ট সেলার">বেস্ট সেলার - ৳ ২,৯৯৯</option>
+                                        <option value="স্ট্যান্ডার্ড">স্ট্যান্ডার্ড - ৳ ১২,০০০</option>
+                                        <option value="প্রিমিয়াম">প্রিমিয়াম - ৳ ২৫,০০০</option>
+                                        <option value="কাস্টম">কাস্টম প্রকল্প</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <label class="block text-gray-700 mb-2" for="message">প্রজেক্টের বিবরণ *</label>
+                                    <textarea id="message" rows="5" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="আপনার ল্যান্ডিং পেজ সম্পর্কে বিস্তারিত বলুন। কোন ধরনের ফিচার দরকার? কোন টেকনোলজি ব্যবহার করতে চান? বাজেট কত?"></textarea>
+                                </div>
+                                
+                                <div class="mt-8">
+                                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-4 rounded-lg transition duration-300 shadow-lg hover:shadow-xl text-lg">
+                                        <i class="fas fa-paper-plane mr-2"></i>মেসেজ পাঠান
+                                    </button>
+                                </div>
+                                
+                                <div class="mt-4 text-center text-gray-600 text-sm">
+                                    <p>আমরা ২৪ ঘণ্টার মধ্যে আপনার সাথে যোগাযোগ করব।</p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ফুটার -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <div class="bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-rocket text-white text-lg"></i>
+                        </div>
+                        <span class="ml-3 text-xl font-bold">ল্যান্ডিং<span class="text-blue-400">প্রো</span></span>
+                    </div>
+                    <p class="text-gray-400">HTML, Tailwind CSS, JavaScript, Node.js, Express.js এবং অন্যান্য আধুনিক টেকনোলজি ব্যবহার করে তৈরি করি উচ্চমানের ল্যান্ডিং পেজ।</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-bold mb-4">দরকারি লিংক</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#services" class="text-gray-400 hover:text-white transition duration-300">সার্ভিস</a></li>
+                        <li><a href="#technologies" class="text-gray-400 hover:text-white transition duration-300">টেকনোলজি</a></li>
+                        <li><a href="#portfolio" class="text-gray-400 hover:text-white transition duration-300">সফল প্রকল্প</a></li>
+                        <li><a href="#process" class="text-gray-400 hover:text-white transition duration-300">প্রক্রিয়া</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-bold mb-4">টেকনোলজি</h4>
+                    <ul class="space-y-2">
+                        <li class="text-gray-400">HTML5 & CSS3</li>
+                        <li class="text-gray-400">Tailwind CSS</li>
+                        <li class="text-gray-400">JavaScript</li>
+                        <li class="text-gray-400">Node.js & Express.js</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-bold mb-4">যোগাযোগ</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-phone mr-3"></i>
+                            <span>+৮৮০ ১৩২৬১৯৮৪৫৬</span>
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-envelope mr-3"></i>
+                            <span>billaharif661@gmail.com</span>
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-map-marker-alt mr-3"></i>
+                            <span>জামগোড়া, আশুলিয়া, সাভার, ঢাকা</span>
+                        </li>
+                    </ul>
+                    
+                    <div class="flex space-x-4 mt-6">
+                        <a href="https://wa.me/8801326198456" target="_blank" class="text-gray-400 hover:text-green-400 transition duration-300">
+                            <i class="fab fa-whatsapp text-xl"></i>
+                        </a>
+                        <a href="https://t.me/8801326198456" target="_blank" class="text-gray-400 hover:text-blue-400 transition duration-300">
+                            <i class="fab fa-telegram text-xl"></i>
+                        </a>
+                        <a href="mailto:billaharif661@gmail.com" class="text-gray-400 hover:text-red-400 transition duration-300">
+                            <i class="fas fa-envelope text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; ২০২৩ ল্যান্ডিংপ্রো। সর্বস্বত্ব সংরক্ষিত।</p>
+                <p class="mt-2">এই ওয়েবসাইটটি HTML, Tailwind CSS এবং JavaScript ব্যবহার করে তৈরি করা হয়েছে</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- জাভাস্ক্রিপ্ট -->
+    <script>
+        // মোবাইল মেনু টগল
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // প্যাকেজ সিলেক্ট ফাংশন
+        function selectPackage(packageName) {
+            const packageSelect = document.getElementById('package');
+            packageSelect.value = packageName;
+            
+            // যোগাযোগ ফর্মে স্ক্রল করান
+            document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+            
+            // ফোকাস দেন ফর্মের উপর
+            setTimeout(() => {
+                document.getElementById('name').focus();
+            }, 500);
+            
+            // নোটিফিকেশন
+            showNotification(`"${packageName}" প্যাকেজ নির্বাচন করা হয়েছে। এখন ফর্ম পূরণ করুন।`);
+        }
+        
+        // ফর্ম সাবমিশন
+        function submitForm(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const package = document.getElementById('package').value;
+            const message = document.getElementById('message').value;
+            const phone = document.getElementById('phone').value || '+৮৮০ ১৩২৬১৯৮৪৫৬';
+            
+            // ভ্যালিডেশন
+            if(!name || !email || !message) {
+                showNotification('দয়া করে প্রয়োজনীয় ফিল্ড গুলো পূরণ করুন।', 'error');
+                return;
+            }
+            
+            // WhatsApp মেসেজ তৈরি করুন
+            const whatsappMessage = `ল্যান্ডিংপ্রো - নতুন ক্লায়েন্টের ইনকোয়ারি:\n\nনাম: ${name}\nইমেইল: ${email}\nফোন: ${phone}\nপ্যাকেজ: ${package}\n\nমেসেজ: ${message}`;
+            
+            // WhatsApp এ রিডাইরেক্ট করুন
+            const whatsappUrl = `https://wa.me/8801326198456?text=${encodeURIComponent(whatsappMessage)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // সিমুলেট করা রেস্পন্স
+            setTimeout(() => {
+                showNotification(`ধন্যবাদ ${name}! আপনার রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই ${email} এ যোগাযোগ করব।`);
+                
+                // ফর্ম রিসেট
+                document.getElementById('contact-form').reset();
+                
+                // ডেমো ডেটা কনসোলে দেখান
+                console.log('ফর্ম সাবমিশন ডেটা:', {
+                    name,
+                    email,
+                    phone,
+                    package,
+                    message,
+                    timestamp: new Date().toISOString()
+                });
+            }, 1000);
+        }
+        
+        // নোটিফিকেশন ফাংশন
+        function showNotification(message, type = 'success') {
+            // বিদ্যমান নোটিফিকেশন রিমুভ করা
+            const existingNotification = document.querySelector('.notification');
+            if(existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // নোটিফিকেশন তৈরি
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} text-white font-medium`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // ৫ সেকেন্ড পর অটো রিমুভ
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+        
+        // স্ক্রল ফাংশন
+        function scrollToContact() {
+            document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function scrollToPortfolio() {
+            document.getElementById('portfolio').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // মসৃণ স্ক্রলিং
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // মোবাইল মেনু বন্ধ করুন
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+        
+        // পেজ লোড হওয়ার পর কিছু ইনিশিয়ালাইজেশন
+        document.addEventListener('DOMContentLoaded', function() {
+            // কোন সিলেক্টেড প্যাকেজ আছে কিনা চেক করা
+            const urlParams = new URLSearchParams(window.location.search);
+            const packageParam = urlParams.get('package');
+            if(packageParam) {
+                const validPackages = ['বেস্ট সেলার', 'স্ট্যান্ডার্ড', 'প্রিমিয়াম', 'কাস্টম'];
+                if(validPackages.includes(packageParam)) {
+                    setTimeout(() => {
+                        selectPackage(packageParam);
+                    }, 1000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
