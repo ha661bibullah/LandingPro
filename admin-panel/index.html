@@ -779,88 +779,121 @@
 
    <script>
     // Configuration
-    const API_BASE_URL = 'https://landingpro-call.onrender.com';
-    let currentToken = null;
-    let currentAdmin = null;
-    let currentPage = 1;
-    let currentLimit = 10;
-    let currentFilters = {};
-    let charts = {};
-    let analyticsInterval = null;
+ // Configuration এর নিচে
+const API_BASE_URL = 'https://landingpro-call.onrender.com';
+let currentToken = localStorage.getItem('adminToken') || null;
+let currentAdmin = localStorage.getItem('adminData') ? JSON.parse(localStorage.getItem('adminData')) : null;
+let currentPage = 1;
+let currentLimit = 10;
+let currentFilters = {};
+let charts = {};
+let analyticsInterval = null;
 
     // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', async () => {
-        console.log('Admin panel loaded');
-        
-        // Check for saved login
-        await checkSavedLogin();
-        
-        // Setup event listeners
-        setupEventListeners();
-        
-        // Initialize mobile menu
-        initMobileMenu();
-        
-        // Initialize content tabs
-        initContentTabs();
-        
-        // Test API connection
-        await testAPIConnection();
-        
-        // Update time
-        updateTime();
-        setInterval(updateTime, 60000);
-    });
-
-    // Check saved login from localStorage
-    async function checkSavedLogin() {
-        const savedToken = localStorage.getItem('adminToken');
-        const savedAdmin = localStorage.getItem('adminData');
-        
-        if (savedToken && savedAdmin) {
-            try {
-                currentToken = savedToken;
-                currentAdmin = JSON.parse(savedAdmin);
-                
-                // Verify token
-                const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
-                    headers: {
-                        'Authorization': `Bearer ${currentToken}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        // Auto login successful
-                        showDashboard();
-                        showToast('স্বয়ংক্রিয়ভাবে লগইন হয়েছে', 'success');
-                        return;
-                    }
-                }
-                
-                // If verification failed, clear invalid data
-                clearSavedLogin();
-                
-            } catch (error) {
-                console.error('Auto login error:', error);
-                clearSavedLogin();
-            }
+    // Initialize when page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('Admin panel loaded');
+    
+    // Check for saved login
+    await checkSavedLogin();
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    // Initialize mobile menu
+    initMobileMenu();
+    
+    // Initialize content tabs
+    initContentTabs();
+    
+    // Test API connection
+    await testAPIConnection();
+    
+    // Update time
+    updateTime();
+    setInterval(updateTime, 60000);
+    
+    // Handle browser refresh/back button
+    window.addEventListener('beforeunload', () => {
+        // Save current state before page unloads
+        if (currentToken && currentAdmin) {
+            localStorage.setItem('adminToken', currentToken);
+            localStorage.setItem('adminData', JSON.stringify(currentAdmin));
         }
-        
+    });
+});
+    // Check saved login from localStorage
+    // Check saved login from localStorage
+async function checkSavedLogin() {
+    const savedToken = localStorage.getItem('adminToken');
+    const savedAdmin = localStorage.getItem('adminData');
+    
+    // If already have tokens in variables, use them
+    if (currentToken && currentAdmin) {
+        await verifyAndLogin();
+        return;
+    }
+    
+    if (savedToken && savedAdmin) {
+        try {
+            currentToken = savedToken;
+            currentAdmin = JSON.parse(savedAdmin);
+            
+            await verifyAndLogin();
+        } catch (error) {
+            console.error('Auto login error:', error);
+            clearSavedLogin();
+            showLoginPage();
+        }
+    } else {
         // Show login page
         showLoginPage();
     }
+}
 
-    // Clear saved login data
-    function clearSavedLogin() {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminData');
-        currentToken = null;
-        currentAdmin = null;
+// Helper function to verify and login
+async function verifyAndLogin() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                // Update admin data with latest from server
+                currentAdmin = data.admin;
+                localStorage.setItem('adminData', JSON.stringify(currentAdmin));
+                
+                // Auto login successful
+                showDashboard();
+                return true;
+            }
+        }
+        
+        // If verification failed, clear invalid data
+        clearSavedLogin();
+        showLoginPage();
+        return false;
+        
+    } catch (error) {
+        console.error('Verification error:', error);
+        clearSavedLogin();
+        showLoginPage();
+        return false;
     }
-
+}
+    // Clear saved login data
+   // Clear saved login data
+function clearSavedLogin() {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminData');
+    currentToken = null;
+    currentAdmin = null;
+}
     // Show login page
     function showLoginPage() {
         document.getElementById('login-page').classList.remove('hidden');
@@ -1336,70 +1369,70 @@
     }
 
     // Login function
-    async function handleLogin(event) {
-        event.preventDefault();
+    // Login function
+async function handleLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const loginBtn = document.getElementById('login-btn');
+    const errorDiv = document.getElementById('login-error');
+    
+    // Clear previous errors
+    errorDiv.classList.add('hidden');
+    errorDiv.textContent = '';
+    
+    // Show loading
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
+    loginBtn.disabled = true;
+    
+    try {
+        console.log('Logging in to:', `${API_BASE_URL}/api/login`);
         
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const loginBtn = document.getElementById('login-btn');
-        const errorDiv = document.getElementById('login-error');
+        const response = await fetch(`${API_BASE_URL}/api/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
         
-        // Clear previous errors
-        errorDiv.classList.add('hidden');
-        errorDiv.textContent = '';
+        console.log('Login response status:', response.status);
         
-        // Show loading
-        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
-        loginBtn.disabled = true;
+        const data = await response.json();
+        console.log('Login response:', data);
         
-        try {
-            console.log('Logging in to:', `${API_BASE_URL}/api/login`);
+        if (response.ok && data.success) {
+            // Save token and admin data to variables AND localStorage
+            currentToken = data.token;
+            currentAdmin = data.admin;
             
-            const response = await fetch(`${API_BASE_URL}/api/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
+            // Always save to localStorage (remove the "remember me" condition)
+            localStorage.setItem('adminToken', currentToken);
+            localStorage.setItem('adminData', JSON.stringify(currentAdmin));
             
-            console.log('Login response status:', response.status);
-            
-            const data = await response.json();
-            console.log('Login response:', data);
-            
-            if (response.ok && data.success) {
-                // Save token and admin data
-                currentToken = data.token;
-                currentAdmin = data.admin;
-                
-                // Save to localStorage if remember me is checked
-                if (document.getElementById('remember').checked) {
-                    localStorage.setItem('adminToken', currentToken);
-                    localStorage.setItem('adminData', JSON.stringify(currentAdmin));
-                }
-                
-                // Switch to dashboard
-                showDashboard();
-                showToast('সফলভাবে লগইন হয়েছে', 'success');
-            } else {
-                throw new Error(data.error || 'লগইন ব্যর্থ হয়েছে');
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            errorDiv.textContent = error.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।';
-            errorDiv.classList.remove('hidden');
-            showToast(error.message || 'লগইন ব্যর্থ', 'error');
-        } finally {
-            // Reset button
-            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>লগইন';
-            loginBtn.disabled = false;
+            // Switch to dashboard
+            showDashboard();
+            showToast('সফলভাবে লগইন হয়েছে', 'success');
+        } else {
+            throw new Error(data.error || 'লগইন ব্যর্থ হয়েছে');
         }
+    } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.textContent = error.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।';
+        errorDiv.classList.remove('hidden');
+        showToast(error.message || 'লগইন ব্যর্থ', 'error');
+    } finally {
+        // Reset button
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>লগইন';
+        loginBtn.disabled = false;
     }
-
+}
     // Logout function
-    function handleLogout() {
+    // Logout function
+function handleLogout() {
+    if (confirm('আপনি কি নিশ্চিত লগআউট করতে চান?')) {
         clearSavedLogin();
         showLoginPage();
         showToast('সফলভাবে লগআউট হয়েছে', 'info');
@@ -1410,7 +1443,7 @@
             analyticsInterval = null;
         }
     }
-
+}
     // Load dashboard statistics
     async function loadDashboardStats() {
         try {
@@ -2151,6 +2184,33 @@
     window.updateContactStatus = updateContactStatus;
     window.deleteContact = deleteContact;
     window.viewVisitorDetails = viewVisitorDetails;
+
+
+    // Enhanced fetch with token refresh
+async function adminFetch(url, options = {}) {
+    const defaultHeaders = {
+        'Authorization': `Bearer ${currentToken}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    };
+    
+    options.headers = { ...defaultHeaders, ...options.headers };
+    
+    try {
+        const response = await fetch(url, options);
+        
+        // If token expired, try to refresh
+        if (response.status === 401) {
+            console.log('Token expired, attempting refresh...');
+            // You can implement token refresh logic here if needed
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
 </script>
 </body>
 </html>
