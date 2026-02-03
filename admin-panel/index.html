@@ -691,7 +691,7 @@
                             <div>
                                 <label class="block text-gray-700 mb-2">API বেস URL</label>
                                 <input type="text" id="api-url" 
-                                       value="https://landingpro-backend.onrender.com"
+                                       value="https://landingpro-call.onrender.com"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50">
                                 <p class="text-gray-600 text-sm mt-2">ব্যাকএন্ড সার্ভারের URL। Render এ ডেপ্লয় করার পর এটি আপডেট করুন।</p>
                             </div>
@@ -779,121 +779,120 @@
 
    <script>
     // Configuration
- // Configuration এর নিচে
-const API_BASE_URL = 'https://landingpro-call.onrender.com';
-let currentToken = localStorage.getItem('adminToken') || null;
-let currentAdmin = localStorage.getItem('adminData') ? JSON.parse(localStorage.getItem('adminData')) : null;
-let currentPage = 1;
-let currentLimit = 10;
-let currentFilters = {};
-let charts = {};
-let analyticsInterval = null;
+    const API_BASE_URL = 'https://landingpro-call.onrender.com';
+    let currentToken = localStorage.getItem('adminToken') || null;
+    let currentAdmin = localStorage.getItem('adminData') ? JSON.parse(localStorage.getItem('adminData')) : null;
+    let currentPage = 1;
+    let currentLimit = 10;
+    let currentFilters = {};
+    let charts = {};
+    let analyticsInterval = null;
 
     // Initialize when page loads
-    // Initialize when page loads
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Admin panel loaded');
-    
-    // Check for saved login
-    await checkSavedLogin();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    // Initialize mobile menu
-    initMobileMenu();
-    
-    // Initialize content tabs
-    initContentTabs();
-    
-    // Test API connection
-    await testAPIConnection();
-    
-    // Update time
-    updateTime();
-    setInterval(updateTime, 60000);
-    
-    // Handle browser refresh/back button
-    window.addEventListener('beforeunload', () => {
-        // Save current state before page unloads
-        if (currentToken && currentAdmin) {
-            localStorage.setItem('adminToken', currentToken);
-            localStorage.setItem('adminData', JSON.stringify(currentAdmin));
-        }
-    });
-});
-    // Check saved login from localStorage
-    // Check saved login from localStorage
-async function checkSavedLogin() {
-    const savedToken = localStorage.getItem('adminToken');
-    const savedAdmin = localStorage.getItem('adminData');
-    
-    // If already have tokens in variables, use them
-    if (currentToken && currentAdmin) {
-        await verifyAndLogin();
-        return;
-    }
-    
-    if (savedToken && savedAdmin) {
-        try {
-            currentToken = savedToken;
-            currentAdmin = JSON.parse(savedAdmin);
-            
-            await verifyAndLogin();
-        } catch (error) {
-            console.error('Auto login error:', error);
-            clearSavedLogin();
-            showLoginPage();
-        }
-    } else {
-        // Show login page
-        showLoginPage();
-    }
-}
-
-// Helper function to verify and login
-async function verifyAndLogin() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-                'Accept': 'application/json'
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('Admin panel loaded');
+        
+        // Check for saved login
+        await checkSavedLogin();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Initialize mobile menu
+        initMobileMenu();
+        
+        // Initialize content tabs
+        initContentTabs();
+        
+        // Test API connection
+        await testAPIConnection();
+        
+        // Update time
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // Handle browser refresh/back button
+        window.addEventListener('beforeunload', () => {
+            // Save current state before page unloads
+            if (currentToken && currentAdmin) {
+                localStorage.setItem('adminToken', currentToken);
+                localStorage.setItem('adminData', JSON.stringify(currentAdmin));
             }
         });
+    });
+
+    // Check saved login from localStorage
+    async function checkSavedLogin() {
+        const savedToken = localStorage.getItem('adminToken');
+        const savedAdmin = localStorage.getItem('adminData');
         
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-                // Update admin data with latest from server
-                currentAdmin = data.admin;
-                localStorage.setItem('adminData', JSON.stringify(currentAdmin));
-                
-                // Auto login successful
-                showDashboard();
-                return true;
-            }
+        // If already have tokens in variables, use them
+        if (currentToken && currentAdmin) {
+            await verifyAndLogin();
+            return;
         }
         
-        // If verification failed, clear invalid data
-        clearSavedLogin();
-        showLoginPage();
-        return false;
-        
-    } catch (error) {
-        console.error('Verification error:', error);
-        clearSavedLogin();
-        showLoginPage();
-        return false;
+        if (savedToken && savedAdmin) {
+            try {
+                currentToken = savedToken;
+                currentAdmin = JSON.parse(savedAdmin);
+                
+                await verifyAndLogin();
+            } catch (error) {
+                console.error('Auto login error:', error);
+                clearSavedLogin();
+                showLoginPage();
+            }
+        } else {
+            // Show login page
+            showLoginPage();
+        }
     }
-}
+
+    // Helper function to verify and login
+    async function verifyAndLogin() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    // Update admin data with latest from server
+                    currentAdmin = data.admin;
+                    localStorage.setItem('adminData', JSON.stringify(currentAdmin));
+                    
+                    // Auto login successful
+                    showDashboard();
+                    return true;
+                }
+            }
+            
+            // If verification failed, clear invalid data
+            clearSavedLogin();
+            showLoginPage();
+            return false;
+            
+        } catch (error) {
+            console.error('Verification error:', error);
+            clearSavedLogin();
+            showLoginPage();
+            return false;
+        }
+    }
+
     // Clear saved login data
-   // Clear saved login data
-function clearSavedLogin() {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminData');
-    currentToken = null;
-    currentAdmin = null;
-}
+    function clearSavedLogin() {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminData');
+        currentToken = null;
+        currentAdmin = null;
+    }
+
     // Show login page
     function showLoginPage() {
         document.getElementById('login-page').classList.remove('hidden');
@@ -1090,12 +1089,7 @@ function clearSavedLogin() {
         try {
             console.log('Loading analytics data...');
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/analytics`);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -1155,12 +1149,7 @@ function clearSavedLogin() {
     // Load active visitors
     async function loadActiveVisitors() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/active`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/analytics/active`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1227,12 +1216,7 @@ function clearSavedLogin() {
     // Load recent events
     async function loadRecentEvents() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/events?limit=10`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/analytics/events?limit=10`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1290,12 +1274,7 @@ function clearSavedLogin() {
     // Load location analytics
     async function loadLocationAnalytics() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/locations`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/analytics/locations`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1368,93 +1347,123 @@ function clearSavedLogin() {
         }
     }
 
-    // Login function
-    // Login function
-async function handleLogin(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const loginBtn = document.getElementById('login-btn');
-    const errorDiv = document.getElementById('login-error');
-    
-    // Clear previous errors
-    errorDiv.classList.add('hidden');
-    errorDiv.textContent = '';
-    
-    // Show loading
-    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
-    loginBtn.disabled = true;
-    
-    try {
-        console.log('Logging in to:', `${API_BASE_URL}/api/login`);
+    // Enhanced fetch with token refresh
+    async function adminFetch(url, options = {}) {
+        const defaultHeaders = {
+            'Authorization': `Bearer ${currentToken}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
         
-        const response = await fetch(`${API_BASE_URL}/api/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        });
+        options.headers = { ...defaultHeaders, ...options.headers };
         
-        console.log('Login response status:', response.status);
-        
-        const data = await response.json();
-        console.log('Login response:', data);
-        
-        if (response.ok && data.success) {
-            // Save token and admin data to variables AND localStorage
-            currentToken = data.token;
-            currentAdmin = data.admin;
+        try {
+            const response = await fetch(url, options);
             
-            // Always save to localStorage (remove the "remember me" condition)
-            localStorage.setItem('adminToken', currentToken);
-            localStorage.setItem('adminData', JSON.stringify(currentAdmin));
+            // If token expired, try to refresh
+            if (response.status === 401) {
+                console.log('Token expired, attempting to re-login...');
+                const loggedIn = await verifyAndLogin();
+                if (loggedIn) {
+                    // Retry the request with new token
+                    options.headers['Authorization'] = `Bearer ${currentToken}`;
+                    return await fetch(url, options);
+                } else {
+                    // Force logout
+                    handleLogout();
+                    throw new Error('Session expired. Please login again.');
+                }
+            }
             
-            // Switch to dashboard
-            showDashboard();
-            showToast('সফলভাবে লগইন হয়েছে', 'success');
-        } else {
-            throw new Error(data.error || 'লগইন ব্যর্থ হয়েছে');
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        errorDiv.textContent = error.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।';
-        errorDiv.classList.remove('hidden');
-        showToast(error.message || 'লগইন ব্যর্থ', 'error');
-    } finally {
-        // Reset button
-        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>লগইন';
-        loginBtn.disabled = false;
-    }
-}
-    // Logout function
-    // Logout function
-function handleLogout() {
-    if (confirm('আপনি কি নিশ্চিত লগআউট করতে চান?')) {
-        clearSavedLogin();
-        showLoginPage();
-        showToast('সফলভাবে লগআউট হয়েছে', 'info');
-        
-        // Clear analytics interval
-        if (analyticsInterval) {
-            clearInterval(analyticsInterval);
-            analyticsInterval = null;
+            return response;
+        } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
         }
     }
-}
+
+    // Login function
+    async function handleLogin(event) {
+        event.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const loginBtn = document.getElementById('login-btn');
+        const errorDiv = document.getElementById('login-error');
+        
+        // Clear previous errors
+        errorDiv.classList.add('hidden');
+        errorDiv.textContent = '';
+        
+        // Show loading
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
+        loginBtn.disabled = true;
+        
+        try {
+            console.log('Logging in to:', `${API_BASE_URL}/api/login`);
+            
+            const response = await fetch(`${API_BASE_URL}/api/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            console.log('Login response status:', response.status);
+            
+            const data = await response.json();
+            console.log('Login response:', data);
+            
+            if (response.ok && data.success) {
+                // Save token and admin data to variables AND localStorage
+                currentToken = data.token;
+                currentAdmin = data.admin;
+                
+                // Always save to localStorage (remove the "remember me" condition)
+                localStorage.setItem('adminToken', currentToken);
+                localStorage.setItem('adminData', JSON.stringify(currentAdmin));
+                
+                // Switch to dashboard
+                showDashboard();
+                showToast('সফলভাবে লগইন হয়েছে', 'success');
+            } else {
+                throw new Error(data.error || 'লগইন ব্যর্থ হয়েছে');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            errorDiv.textContent = error.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।';
+            errorDiv.classList.remove('hidden');
+            showToast(error.message || 'লগইন ব্যর্থ', 'error');
+        } finally {
+            // Reset button
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>লগইন';
+            loginBtn.disabled = false;
+        }
+    }
+
+    // Logout function
+    function handleLogout() {
+        if (confirm('আপনি কি নিশ্চিত লগআউট করতে চান?')) {
+            clearSavedLogin();
+            showLoginPage();
+            showToast('সফলভাবে লগআউট হয়েছে', 'info');
+            
+            // Clear analytics interval
+            if (analyticsInterval) {
+                clearInterval(analyticsInterval);
+                analyticsInterval = null;
+            }
+        }
+    }
+
     // Load dashboard statistics
     async function loadDashboardStats() {
         try {
             console.log('Loading dashboard stats...');
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/stats`);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -1479,12 +1488,7 @@ function handleLogout() {
     // Load recent contacts
     async function loadRecentContacts() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/contacts?limit=5&sortOrder=desc`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/contacts?limit=5&sortOrder=desc`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1574,12 +1578,7 @@ function handleLogout() {
             
             console.log('Loading contacts with params:', params.toString());
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/contacts?${params}`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/contacts?${params}`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1688,12 +1687,7 @@ function handleLogout() {
     // View contact details
     async function viewContact(contactId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1760,12 +1754,7 @@ function handleLogout() {
     // View visitor details
     async function viewVisitorDetails(sessionId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/visitor/${sessionId}`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/analytics/visitor/${sessionId}`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1870,13 +1859,8 @@ function handleLogout() {
         if (!confirm('স্ট্যাটাস আপডেট করতে চান?')) return;
         
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
                 method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
                 body: JSON.stringify({ status })
             });
             
@@ -1900,12 +1884,8 @@ function handleLogout() {
         if (!confirm('এই কন্টাক্ট ডিলিট করতে চান?')) return;
         
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
+            const response = await adminFetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
+                method: 'DELETE'
             });
             
             if (response.ok) {
@@ -2184,33 +2164,6 @@ function handleLogout() {
     window.updateContactStatus = updateContactStatus;
     window.deleteContact = deleteContact;
     window.viewVisitorDetails = viewVisitorDetails;
-
-
-    // Enhanced fetch with token refresh
-async function adminFetch(url, options = {}) {
-    const defaultHeaders = {
-        'Authorization': `Bearer ${currentToken}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-    };
-    
-    options.headers = { ...defaultHeaders, ...options.headers };
-    
-    try {
-        const response = await fetch(url, options);
-        
-        // If token expired, try to refresh
-        if (response.status === 401) {
-            console.log('Token expired, attempting refresh...');
-            // You can implement token refresh logic here if needed
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('Fetch error:', error);
-        throw error;
-    }
-}
 </script>
 </body>
 </html>

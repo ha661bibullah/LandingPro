@@ -510,7 +510,7 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // টোকেন জেনারেট
+        // টোকেন জেনারেট (৩০ দিনের জন্য)
         const token = jwt.sign(
             { 
                 id: admin._id, 
@@ -518,7 +518,7 @@ app.post('/api/login', async (req, res) => {
                 role: admin.role 
             },
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '30d' } // ৩০ দিন পর্যন্ত বৈধ
         );
 
         // লাস্ট লগইন আপডেট
