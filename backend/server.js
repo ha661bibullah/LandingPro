@@ -27,7 +27,7 @@ app.use(helmet({
 
 // CORS কনফিগারেশন
 const corsOptions = {
-    origin: ['https://6981c677f81073fb047ec73e--ephemeral-buttercream-eb339c.netlify.app', 'https://storied-travesseiro-cc792e.netlify.app', 'http://localhost:3000'],
+    origin: ['http://landingpro.online', 'https://admin.landingpro.online', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
