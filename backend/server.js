@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-    origin: ['https://landingpro.netlify.app', 'http://localhost:3000'],
+    origin: ['https://ephemeral-buttercream-eb339c.netlify.app', 'http://localhost:3000'],
     credentials: true
 }));
 app.use(express.json());
