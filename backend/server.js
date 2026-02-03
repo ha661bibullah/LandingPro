@@ -555,30 +555,57 @@ app.post('/api/login', async (req, res) => {
 });
 
 // এডমিন টোকেন ভেরিফিকেশন
+// এডমিন টোকেন ভেরিফিকেশন - উন্নত সংস্করণ
 app.get('/api/admin/verify', authenticateToken, async (req, res) => {
     try {
-        const admin = await Admin.findById(req.user.id);
+        const admin = await Admin.findById(req.user.id)
+            .select('-password -__v');
         
-        if (!admin || !admin.isActive) {
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                error: 'এডমিন ইউজার পাওয়া যায়নি'
+            });
+        }
+
+        if (!admin.isActive) {
             return res.status(403).json({
                 success: false,
-                error: 'অ্যাকাউন্ট নিষ্ক্রিয় বা পাওয়া যায়নি'
+                error: 'এই অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে'
             });
         }
 
         res.status(200).json({
             success: true,
+            message: 'টোকেন ভ্যালিড',
             admin: {
                 id: admin._id,
                 email: admin.email,
                 name: admin.name,
                 role: admin.role,
-                lastLogin: admin.lastLogin
+                lastLogin: admin.lastLogin,
+                createdAt: admin.createdAt
             }
         });
 
     } catch (error) {
         console.error('টোকেন ভেরিফিকেশন ইরর:', error);
+        
+        // Specific error handling
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({
+                success: false,
+                error: 'অবৈধ টোকেন'
+            });
+        }
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                success: false,
+                error: 'টোকেন মেয়াদ উত্তীর্ণ'
+            });
+        }
+        
         res.status(500).json({
             success: false,
             error: 'ভেরিফিকেশন ব্যর্থ'
