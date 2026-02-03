@@ -12,15 +12,58 @@
             font-family: 'Hind Siliguri', sans-serif;
         }
         .sidebar {
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease-in-out;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
         }
-        @media (max-width: 768px) {
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+        }
+        .mobile-overlay.active {
+            display: block;
+        }
+        @media (min-width: 768px) {
+            .sidebar {
+                transform: translateX(0) !important;
+                position: relative;
+            }
+            .mobile-overlay {
+                display: none !important;
+            }
+        }
+        @media (max-width: 767px) {
             .sidebar {
                 transform: translateX(-100%);
             }
             .sidebar.active {
                 transform: translateX(0);
             }
+            main {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+        }
+        .content-section {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .active-section {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-left: 4px solid #3b82f6;
         }
     </style>
 </head>
@@ -68,11 +111,14 @@
 
     <!-- Admin Dashboard -->
     <div id="dashboard" class="hidden">
+        <!-- Mobile Overlay -->
+        <div id="mobile-overlay" class="mobile-overlay"></div>
+
         <!-- Top Navigation -->
         <nav class="bg-white shadow-md sticky top-0 z-40">
             <div class="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center">
-                    <button id="menu-toggle" class="md:hidden text-gray-700 mr-3">
+                    <button id="menu-toggle" class="md:hidden text-gray-700 mr-3 focus:outline-none">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     <div class="flex items-center">
@@ -104,23 +150,17 @@
             </div>
         </nav>
 
-        <div class="flex">
+        <div class="flex relative">
             <!-- Sidebar -->
-            <aside class="sidebar w-64 bg-white shadow-md min-h-screen fixed md:relative z-30">
-                <div class="p-6 border-b border-gray-200">
+            <aside class="sidebar w-64 bg-white shadow-md min-h-screen">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                     <h3 class="font-bold text-gray-800">ড্যাশবোর্ড মেনু</h3>
+                    <button id="close-menu" class="md:hidden text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
                 </div>
                 
-                <nav class="p-4 space-y-2">
-                      <!-- Existing links... -->
-    <a href="#" data-section="content-management" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
-        <i class="fas fa-edit mr-3"></i>
-        কন্টেন্ট ম্যানেজমেন্ট
-    </a>
-    <a href="#" data-section="analytics" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
-        <i class="fas fa-chart-bar mr-3"></i>
-        অ্যানালিটিক্স মনিটরিং
-    </a>
+                <nav class="p-4 space-y-1">
                     <a href="#" data-section="dashboard-home" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200 active-section">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         ড্যাশবোর্ড
@@ -129,9 +169,13 @@
                         <i class="fas fa-users mr-3"></i>
                         কন্টাক্ট রিকোয়েস্ট
                     </a>
+                    <a href="#" data-section="content-management" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
+                        <i class="fas fa-edit mr-3"></i>
+                        কন্টেন্ট ম্যানেজমেন্ট
+                    </a>
                     <a href="#" data-section="analytics" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
                         <i class="fas fa-chart-bar mr-3"></i>
-                        অ্যানালিটিক্স
+                        অ্যানালিটিক্স মনিটরিং
                     </a>
                     <a href="#" data-section="settings" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
                         <i class="fas fa-cog mr-3"></i>
@@ -141,7 +185,7 @@
             </aside>
 
             <!-- Main Content -->
-            <main class="flex-1 p-6 md:ml-64">
+            <main class="flex-1 p-4 md:p-6 md:ml-64 w-full">
                 <!-- Dashboard Home -->
                 <section id="dashboard-home" class="content-section">
                     <div class="mb-8">
@@ -150,61 +194,61 @@
                     </div>
 
                     <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600">মোট কন্টাক্ট</p>
-                                    <h3 class="text-3xl font-bold text-gray-800" id="total-contacts">0</h3>
+                                    <p class="text-gray-600 text-sm md:text-base">মোট কন্টাক্ট</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="total-contacts">0</h3>
                                 </div>
-                                <div class="bg-blue-100 p-3 rounded-lg">
-                                    <i class="fas fa-users text-blue-600 text-2xl"></i>
+                                <div class="bg-blue-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-users text-blue-600 text-xl md:text-2xl"></i>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600">নতুন রিকোয়েস্ট</p>
-                                    <h3 class="text-3xl font-bold text-gray-800" id="new-contacts">0</h3>
+                                    <p class="text-gray-600 text-sm md:text-base">নতুন রিকোয়েস্ট</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="new-contacts">0</h3>
                                 </div>
-                                <div class="bg-green-100 p-3 rounded-lg">
-                                    <i class="fas fa-plus-circle text-green-600 text-2xl"></i>
+                                <div class="bg-green-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-plus-circle text-green-600 text-xl md:text-2xl"></i>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600">প্রসেসিং</p>
-                                    <h3 class="text-3xl font-bold text-gray-800" id="processing-contacts">0</h3>
+                                    <p class="text-gray-600 text-sm md:text-base">প্রসেসিং</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="processing-contacts">0</h3>
                                 </div>
-                                <div class="bg-yellow-100 p-3 rounded-lg">
-                                    <i class="fas fa-spinner text-yellow-600 text-2xl"></i>
+                                <div class="bg-yellow-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-spinner text-yellow-600 text-xl md:text-2xl"></i>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600">সম্পন্ন</p>
-                                    <h3 class="text-3xl font-bold text-gray-800" id="completed-contacts">0</h3>
+                                    <p class="text-gray-600 text-sm md:text-base">সম্পন্ন</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="completed-contacts">0</h3>
                                 </div>
-                                <div class="bg-purple-100 p-3 rounded-lg">
-                                    <i class="fas fa-check-circle text-purple-600 text-2xl"></i>
+                                <div class="bg-purple-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-check-circle text-purple-600 text-xl md:text-2xl"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recent Contacts -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                        <div class="flex justify-between items-center mb-6">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
                             <h3 class="text-xl font-bold text-gray-800">সাম্প্রতিক কন্টাক্ট রিকোয়েস্ট</h3>
-                            <a href="#" data-section="contacts" class="text-blue-600 hover:text-blue-800">
+                            <a href="#" data-section="contacts" class="text-blue-600 hover:text-blue-800 text-sm md:text-base">
                                 সব দেখুন <i class="fas fa-arrow-right ml-1"></i>
                             </a>
                         </div>
@@ -213,11 +257,11 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead>
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">নাম</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ইমেইল</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">প্যাকেজ</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">তারিখ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">নাম</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ইমেইল</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">প্যাকেজ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">তারিখ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recent-contacts" class="divide-y divide-gray-200">
@@ -236,11 +280,11 @@
                     </div>
 
                     <!-- Filters -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                                <label class="block text-gray-700 mb-2">স্ট্যাটাস</label>
-                                <select id="status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <label class="block text-gray-700 mb-2 text-sm md:text-base">স্ট্যাটাস</label>
+                                <select id="status-filter" class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-sm md:text-base">
                                     <option value="all">সব স্ট্যাটাস</option>
                                     <option value="new">নতুন</option>
                                     <option value="contacted">যোগাযোগ করা হয়েছে</option>
@@ -251,8 +295,8 @@
                             </div>
                             
                             <div>
-                                <label class="block text-gray-700 mb-2">প্যাকেজ</label>
-                                <select id="package-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <label class="block text-gray-700 mb-2 text-sm md:text-base">প্যাকেজ</label>
+                                <select id="package-filter" class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-sm md:text-base">
                                     <option value="all">সব প্যাকেজ</option>
                                     <option value="বেস্ট সেলার">বেস্ট সেলার</option>
                                     <option value="স্ট্যান্ডার্ড">স্ট্যান্ডার্ড</option>
@@ -262,13 +306,13 @@
                             </div>
                             
                             <div>
-                                <label class="block text-gray-700 mb-2">সার্চ</label>
+                                <label class="block text-gray-700 mb-2 text-sm md:text-base">সার্চ</label>
                                 <input type="text" id="search-filter" placeholder="নাম, ইমেইল বা মেসেজ"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                       class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-sm md:text-base">
                             </div>
                             
                             <div class="flex items-end">
-                                <button id="apply-filters" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
+                                <button id="apply-filters" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm md:text-base">
                                     <i class="fas fa-filter mr-2"></i>ফিল্টার প্রয়োগ
                                 </button>
                             </div>
@@ -281,12 +325,12 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">নাম</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">যোগাযোগ</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">প্যাকেজ</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">তারিখ</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">নাম</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">যোগাযোগ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">প্যাকেজ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">তারিখ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
                                     </tr>
                                 </thead>
                                 <tbody id="contacts-table" class="divide-y divide-gray-200">
@@ -296,7 +340,7 @@
                         </div>
                         
                         <!-- Pagination -->
-                        <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                        <div class="px-4 md:px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-2">
                             <div class="text-sm text-gray-700">
                                 দেখানো হচ্ছে <span id="page-start">0</span> থেকে <span id="page-end">0</span> এর <span id="total-entries">0</span> টি এন্ট্রি
                             </div>
@@ -313,25 +357,191 @@
                     </div>
                 </section>
 
+                <!-- Content Management -->
+                <section id="content-management" class="content-section hidden">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">কন্টেন্ট ম্যানেজমেন্ট</h2>
+                        <p class="text-gray-600">ফ্রন্টএন্ড পেজের সকল কন্টেন্ট এডিট করুন</p>
+                    </div>
+
+                    <!-- Content Tabs -->
+                    <div class="mb-6">
+                        <div class="border-b border-gray-200 overflow-x-auto">
+                            <nav class="flex space-x-2 md:space-x-8 min-w-max">
+                                <button id="content-tab-text" class="content-tab py-3 px-2 md:px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600 whitespace-nowrap">
+                                    <i class="fas fa-font mr-2"></i>টেক্সট কন্টেন্ট
+                                </button>
+                                <button id="content-tab-packages" class="content-tab py-3 px-2 md:px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                                    <i class="fas fa-box mr-2"></i>প্যাকেজ ম্যানেজমেন্ট
+                                </button>
+                                <button id="content-tab-projects" class="content-tab py-3 px-2 md:px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                                    <i class="fas fa-project-diagram mr-2"></i>প্রজেক্ট ম্যানেজমেন্ট
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Text Content Management -->
+                    <div id="text-content-panel" class="content-panel">
+                        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                                <select id="content-page-filter" class="px-4 py-2 border border-gray-300 rounded-lg w-full sm:w-auto">
+                                    <option value="all">সব পেজ</option>
+                                    <option value="home">হোমপেজ</option>
+                                    <option value="contact">যোগাযোগ</option>
+                                    <option value="services">সার্ভিস</option>
+                                </select>
+                                <select id="content-section-filter" class="px-4 py-2 border border-gray-300 rounded-lg w-full sm:w-auto">
+                                    <option value="all">সব সেকশন</option>
+                                    <option value="hero">হিরো</option>
+                                    <option value="services">সার্ভিস</option>
+                                    <option value="contact">যোগাযোগ</option>
+                                    <option value="footer">ফুটার</option>
+                                </select>
+                            </div>
+                            <button id="add-content-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 w-full sm:w-auto">
+                                <i class="fas fa-plus mr-2"></i>নতুন কন্টেন্ট
+                            </button>
+                        </div>
+
+                        <!-- Content List -->
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-8">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কি</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">পেজ</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সেকশন</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কন্টেন্ট</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="content-list" class="divide-y divide-gray-200">
+                                        <tr>
+                                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                                <i class="fas fa-inbox text-3xl mb-2"></i>
+                                                <p>কোন কন্টেন্ট পাওয়া যায়নি</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Packages Management -->
+                    <div id="packages-panel" class="content-panel hidden">
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-4"></i>
+                            <p class="text-lg">প্যাকেজ ম্যানেজমেন্ট শীঘ্রই আসছে...</p>
+                        </div>
+                    </div>
+
+                    <!-- Projects Management -->
+                    <div id="projects-panel" class="content-panel hidden">
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="fas fa-project-diagram text-4xl mb-4"></i>
+                            <p class="text-lg">প্রজেক্ট ম্যানেজমেন্ট শীঘ্রই আসছে...</p>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Analytics -->
                 <section id="analytics" class="content-section hidden">
                     <div class="mb-8">
-                        <h2 class="text-2xl font-bold text-gray-800">অ্যানালিটিক্স এবং রিপোর্ট</h2>
-                        <p class="text-gray-600">প্যাকেজ ভিত্তিক বিশ্লেষণ এবং পারফরম্যান্স রিপোর্ট</p>
+                        <h2 class="text-2xl font-bold text-gray-800">ইউজার অ্যানালিটিক্স এবং মনিটরিং</h2>
+                        <p class="text-gray-600">বাস্তব সময়ে ভিজিটর ট্র্যাকিং এবং বিহেভিয়ার অ্যানালাইসিস</p>
                     </div>
 
+                    <!-- Real-time Stats -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">সক্রিয় ভিজিটর</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="active-visitors">0</h3>
+                                </div>
+                                <div class="bg-green-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-users text-green-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">আজকের ভিজিটর</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="today-visitors">0</h3>
+                                </div>
+                                <div class="bg-blue-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-chart-line text-blue-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">মোট পেজ ভিউ</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="total-pageviews">0</h3>
+                                </div>
+                                <div class="bg-purple-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-eye text-purple-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">গড় সেশন সময়</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="avg-session">0s</h3>
+                                </div>
+                                <div class="bg-yellow-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-clock text-yellow-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
                             <h3 class="text-xl font-bold text-gray-800 mb-4">প্যাকেজ ডিস্ট্রিবিউশন</h3>
                             <div id="package-chart" class="h-64 flex items-center justify-center">
                                 <p class="text-gray-500">ডেটা লোড হচ্ছে...</p>
                             </div>
                         </div>
                         
-                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
                             <h3 class="text-xl font-bold text-gray-800 mb-4">স্ট্যাটাস ডিস্ট্রিবিউশন</h3>
                             <div id="status-chart" class="h-64 flex items-center justify-center">
                                 <p class="text-gray-500">ডেটা লোড হচ্ছে...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Analytics -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">ডিভাইস ডিস্ট্রিবিউশন</h3>
+                            <div id="device-chart" class="h-64 flex items-center justify-center text-gray-500">
+                                <div class="text-center">
+                                    <i class="fas fa-mobile-alt text-3xl mb-2"></i>
+                                    <p>শীঘ্রই আসছে...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">ইভেন্ট অ্যানালিটিক্স</h3>
+                            <div id="event-chart" class="h-64 flex items-center justify-center text-gray-500">
+                                <div class="text-center">
+                                    <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                                    <p>শীঘ্রই আসছে...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -344,7 +554,7 @@
                         <p class="text-gray-600">এডমিন প্যানেল কনফিগারেশন</p>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">API কনফিগারেশন</h3>
                         
                         <div class="space-y-6">
@@ -358,12 +568,12 @@
                             
                             <div>
                                 <label class="block text-gray-700 mb-2">সিস্টেম স্ট্যাটাস</label>
-                                <div class="flex items-center space-x-4">
+                                <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                                     <div class="flex items-center">
                                         <div class="w-3 h-3 rounded-full bg-green-500 mr-2" id="api-status"></div>
                                         <span id="api-status-text">API কানেক্টেড</span>
                                     </div>
-                                    <button id="test-api" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                    <button id="test-api" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full sm:w-auto">
                                         টেস্ট কানেকশন
                                     </button>
                                 </div>
@@ -371,8 +581,16 @@
                             
                             <div class="pt-6 border-t border-gray-200">
                                 <h4 class="font-bold text-gray-800 mb-4">বাংলাদেশ সময়</h4>
-                                <p class="text-gray-600">সার্ভার সময়: <span id="server-time">লোড হচ্ছে...</span></p>
-                                <p class="text-gray-600">লোকাল সময়: <span id="local-time">লোড হচ্ছে...</span></p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-gray-600 text-sm">সার্ভার সময়:</p>
+                                        <p class="font-medium text-gray-800" id="server-time">লোড হচ্ছে...</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600 text-sm">লোকাল সময়:</p>
+                                        <p class="font-medium text-gray-800" id="local-time">লোড হচ্ছে...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -400,15 +618,15 @@
                 
                 <div class="mt-6 pt-6 border-t border-gray-200">
                     <h4 class="font-bold text-gray-800 mb-4">স্ট্যাটাস আপডেট</h4>
-                    <div class="flex space-x-4">
-                        <select id="update-status" class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <select id="update-status" class="px-4 py-2 border border-gray-300 rounded-lg w-full sm:w-auto">
                             <option value="new">নতুন</option>
                             <option value="contacted">যোগাযোগ করা হয়েছে</option>
                             <option value="in_progress">প্রসেসিং</option>
                             <option value="completed">সম্পন্ন</option>
                             <option value="cancelled">বাতিল</option>
                         </select>
-                        <button id="save-status" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <button id="save-status" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full sm:w-auto">
                             সেভ করুন
                         </button>
                     </div>
@@ -429,14 +647,54 @@
         </div>
     </div>
 
-       <script>
-        // API Configuration - একবার /api লিখুন
+    <script>
+        // API Configuration
         const API_BASE_URL = 'https://landingpro-3alp.onrender.com';
         let currentToken = null;
         let currentAdmin = null;
         let currentPage = 1;
         let currentLimit = 10;
         let currentFilters = {};
+
+        // Mobile Menu Functions
+        function initMobileMenu() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeMenu = document.getElementById('close-menu');
+            const overlay = document.getElementById('mobile-overlay');
+            const sidebar = document.querySelector('.sidebar');
+            
+            // Toggle sidebar
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // Close sidebar
+            closeMenu.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close sidebar when clicking on overlay
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close sidebar when clicking on nav links (for mobile)
+            document.querySelectorAll('[data-section]').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 768) {
+                        sidebar.classList.remove('active');
+                        overlay.classList.remove('active');
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            });
+        }
 
         // Toast Notification
         function showToast(message, type = 'info') {
@@ -473,6 +731,37 @@
             setTimeout(() => {
                 toast.classList.add('hidden');
             }, 5000);
+        }
+
+        // Content Management Tabs
+        function initContentTabs() {
+            const tabs = document.querySelectorAll('.content-tab');
+            const panels = document.querySelectorAll('.content-panel');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active from all tabs
+                    tabs.forEach(t => {
+                        t.classList.remove('border-blue-500', 'text-blue-600');
+                        t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    
+                    // Add active to clicked tab
+                    tab.classList.add('border-blue-500', 'text-blue-600');
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    // Hide all panels
+                    panels.forEach(panel => panel.classList.add('hidden'));
+                    
+                    // Show corresponding panel
+                    const tabId = tab.id.replace('content-tab-', '');
+                    const panelId = `${tabId}-panel`;
+                    const panel = document.getElementById(panelId);
+                    if (panel) {
+                        panel.classList.remove('hidden');
+                    }
+                });
+            });
         }
 
         // Login Function
@@ -590,6 +879,8 @@
             
             // Set up event listeners
             setupEventListeners();
+            initMobileMenu();
+            initContentTabs();
             
             // Test API connection
             testAPIConnection();
@@ -687,24 +978,24 @@
                             };
                             
                             row.innerHTML = `
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-4 py-4 whitespace-nowrap">
                                     <div class="font-medium text-gray-900">${contact.name || 'N/A'}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-4 py-4 whitespace-nowrap">
                                     <div class="text-gray-900">${contact.email || 'N/A'}</div>
                                     <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-4 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
                                         ${contact.package || 'N/A'}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-4 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
                                         ${statusText[contact.status] || contact.status || 'N/A'}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                     ${contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('bn-BD') : 'N/A'}
                                 </td>
                             `;
@@ -778,27 +1069,27 @@
                             };
                             
                             row.innerHTML = `
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4">
                                     <div class="font-medium text-gray-900">${contact.name || 'N/A'}</div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4">
                                     <div class="text-gray-900">${contact.email || 'N/A'}</div>
                                     <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4">
                                     <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
                                         ${contact.package || 'N/A'}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4">
                                     <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
                                         ${statusText[contact.status] || contact.status || 'N/A'}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
+                                <td class="px-4 py-4 text-sm text-gray-500">
                                     ${contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('bn-BD') : 'N/A'}
                                 </td>
-                                <td class="px-6 py-4 text-sm">
+                                <td class="px-4 py-4 text-sm">
                                     <button onclick="viewContactDetails('${contact._id}')" class="text-blue-600 hover:text-blue-900 mr-3" title="ডিটেইলস দেখুন">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -884,7 +1175,7 @@
                         };
                         
                         detailsDiv.innerHTML = `
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 <div>
                                     <p class="text-gray-600 text-sm">নাম</p>
                                     <p class="font-medium text-gray-800">${contact.name || 'N/A'}</p>
@@ -1002,165 +1293,89 @@
         }
 
         // Load Analytics
-        // admin-panel/index.html এর মধ্যে analytics লোড করার ফাংশন আপডেট করুন
-async function loadAnalytics() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-                'Accept': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            
-            if (data.success) {
-                // Update stats cards
-                document.getElementById('active-visitors').textContent = data.stats.activeVisitors || 0;
-                document.getElementById('today-visitors').textContent = data.stats.visitorsToday || 0;
-                document.getElementById('total-pageviews').textContent = data.stats.totalPageViews || 0;
-                document.getElementById('avg-session').textContent = `${data.stats.avgSessionDuration || 0}s`;
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json'
+                    }
+                });
                 
-                // Update real-time visitors
-                const realtimeDiv = document.getElementById('realtime-visitors');
-                if (data.recentSessions && data.recentSessions.length > 0) {
-                    realtimeDiv.innerHTML = data.recentSessions.map(session => `
-                        <div class="mb-4 p-3 border border-gray-200 rounded-lg">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium text-gray-800">
-                                        <i class="fas fa-user mr-2 text-blue-500"></i>
-                                        ${session.sessionId} (${session.deviceInfo?.type || 'unknown'})
-                                    </p>
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        <i class="fas fa-globe mr-1"></i>
-                                        ${session.location?.city || 'Unknown'}, ${session.location?.country || 'Unknown'}
-                                    </p>
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        <i class="fas fa-file-alt mr-1"></i>
-                                        ${session.currentPage} • ${session.pageViews} পেজ ভিউ • ${session.sessionDuration}s
-                                    </p>
-                                </div>
-                                <span class="text-xs text-gray-500">
-                                    ${new Date(session.lastActivity).toLocaleTimeString('bn-BD', {hour: '2-digit', minute:'2-digit'})}
-                                </span>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    realtimeDiv.innerHTML = '<p class="text-gray-500 text-center py-8">কোন সক্রিয় ভিজিটর নেই</p>';
-                }
-                
-                // Update top pages
-                const topPagesDiv = document.getElementById('top-pages');
-                if (data.topPages && data.topPages.length > 0) {
-                    topPagesDiv.innerHTML = data.topPages.map((page, index) => `
-                        <div class="mb-3">
-                            <div class="flex justify-between mb-1">
-                                <span class="text-gray-700">${page.page}</span>
-                                <span class="font-medium">${page.count}</span>
-                            </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-blue-600 rounded-full" style="width: ${(page.count / data.stats.totalPageViews) * 100}%"></div>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-                
-                // Update device distribution
-                const deviceChart = document.getElementById('device-chart');
-                if (data.deviceDistribution) {
-                    const devices = Object.entries(data.deviceDistribution);
-                    if (devices.length > 0) {
-                        deviceChart.innerHTML = devices.map(([device, count]) => `
-                            <div class="mb-3">
-                                <div class="flex justify-between mb-1">
-                                    <span class="text-gray-700">${device}</span>
-                                    <span class="font-medium">${count}</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div class="h-full ${device === 'mobile' ? 'bg-green-600' : device === 'desktop' ? 'bg-blue-600' : 'bg-purple-600'} rounded-full" 
-                                         style="width: ${(count / data.stats.totalSessions) * 100}%"></div>
-                                </div>
-                            </div>
-                        `).join('');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Package Distribution
+                        const packageChart = document.getElementById('package-chart');
+                        if (data.packageStats && data.packageStats.length > 0) {
+                            packageChart.innerHTML = '';
+                            data.packageStats.forEach(item => {
+                                const percentage = data.totalContacts > 0 ? 
+                                    ((item.count / data.totalContacts) * 100).toFixed(1) : 0;
+                                const color = item._id === 'প্রিমিয়াম' ? 'bg-purple-600' : 
+                                             item._id === 'স্ট্যান্ডার্ড' ? 'bg-blue-600' : 
+                                             item._id === 'বেস্ট সেলার' ? 'bg-green-600' : 'bg-gray-600';
+                                
+                                const bar = document.createElement('div');
+                                bar.className = 'mb-4';
+                                bar.innerHTML = `
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-gray-700">${item._id || 'N/A'}</span>
+                                        <span class="font-medium">${item.count} (${percentage}%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full ${color} rounded-full" style="width: ${percentage}%"></div>
+                                    </div>
+                                `;
+                                packageChart.appendChild(bar);
+                            });
+                        } else {
+                            packageChart.innerHTML = '<p class="text-gray-500 text-center py-8">কোন প্যাকেজ ডেটা পাওয়া যায়নি</p>';
+                        }
+                        
+                        // Status Distribution
+                        const statusChart = document.getElementById('status-chart');
+                        const statusData = [
+                            { label: 'নতুন', count: data.newContacts || 0, color: 'bg-blue-600' },
+                            { label: 'যোগাযোগ', count: data.contacted || 0, color: 'bg-yellow-600' },
+                            { label: 'প্রসেসিং', count: data.inProgress || 0, color: 'bg-orange-600' },
+                            { label: 'সম্পন্ন', count: data.completed || 0, color: 'bg-green-600' },
+                            { label: 'বাতিল', count: data.cancelled || 0, color: 'bg-red-600' }
+                        ];
+                        
+                        if (data.totalContacts > 0) {
+                            statusChart.innerHTML = '';
+                            statusData.forEach(item => {
+                                const percentage = ((item.count / data.totalContacts) * 100).toFixed(1);
+                                
+                                const bar = document.createElement('div');
+                                bar.className = 'mb-4';
+                                bar.innerHTML = `
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-gray-700">${item.label}</span>
+                                        <span class="font-medium">${item.count} (${percentage}%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full ${item.color} rounded-full" style="width: ${percentage}%"></div>
+                                    </div>
+                                `;
+                                statusChart.appendChild(bar);
+                            });
+                        } else {
+                            statusChart.innerHTML = '<p class="text-gray-500 text-center py-8">কোন স্ট্যাটাস ডেটা পাওয়া যায়নি</p>';
+                        }
                     }
                 }
-                
-                // Update event analytics
-                const eventChart = document.getElementById('event-chart');
-                if (data.eventCounts) {
-                    const events = Object.entries(data.eventCounts);
-                    if (events.length > 0) {
-                        eventChart.innerHTML = events.map(([event, count]) => `
-                            <div class="mb-3">
-                                <div class="flex justify-between mb-1">
-                                    <span class="text-gray-700">${event}</span>
-                                    <span class="font-medium">${count}</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div class="h-full ${event === 'click' ? 'bg-red-600' : event === 'scroll' ? 'bg-yellow-600' : 'bg-indigo-600'} rounded-full" 
-                                         style="width: ${Math.min((count / 50) * 100, 100)}%"></div>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                const packageChart = document.getElementById('package-chart');
+                const statusChart = document.getElementById('status-chart');
+                packageChart.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
+                statusChart.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
             }
         }
-    } catch (error) {
-        console.error('Error loading analytics:', error);
-        // Don't show error, just update UI
-        document.getElementById('active-visitors').textContent = '0';
-        document.getElementById('today-visitors').textContent = '0';
-        document.getElementById('total-pageviews').textContent = '0';
-        document.getElementById('avg-session').textContent = '0s';
-        
-        document.getElementById('realtime-visitors').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
-        document.getElementById('top-pages').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
-        document.getElementById('device-chart').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
-        document.getElementById('event-chart').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
-    }
-}
 
-// Real-time analytics refresh function
-async function refreshRealTimeAnalytics() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/analytics/realtime`, {
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-                'Accept': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-                document.getElementById('active-visitors').textContent = data.activeVisitors || 0;
-            }
-        }
-    } catch (error) {
-        console.error('Real-time refresh error:', error);
-    }
-}
-
-// Set up periodic refresh for analytics section
-let analyticsRefreshInterval = null;
-
-function setupAnalyticsRefresh() {
-    if (analyticsRefreshInterval) {
-        clearInterval(analyticsRefreshInterval);
-    }
-    
-    // Refresh every 30 seconds when analytics section is active
-    analyticsRefreshInterval = setInterval(() => {
-        const analyticsSection = document.getElementById('analytics');
-        if (!analyticsSection.classList.contains('hidden')) {
-            refreshRealTimeAnalytics();
-        }
-    }, 30000);
-}
         // Update Time
         function updateTime() {
             const now = new Date();
@@ -1228,14 +1443,6 @@ function setupAnalyticsRefresh() {
 
         // Setup Event Listeners
         function setupEventListeners() {
-            // Mobile menu toggle
-            const menuToggle = document.getElementById('menu-toggle');
-            if (menuToggle) {
-                menuToggle.addEventListener('click', () => {
-                    document.querySelector('.sidebar').classList.toggle('active');
-                });
-            }
-            
             // Section navigation
             document.querySelectorAll('[data-section]').forEach(link => {
                 link.addEventListener('click', (e) => {
@@ -1257,12 +1464,6 @@ function setupAnalyticsRefresh() {
                     if (sectionElement) {
                         sectionElement.classList.remove('hidden');
                         link.classList.add('active-section');
-                    }
-                    
-                    // Close mobile menu
-                    const sidebar = document.querySelector('.sidebar');
-                    if (sidebar) {
-                        sidebar.classList.remove('active');
                     }
                     
                     // Load section specific data
@@ -1459,353 +1660,19 @@ function setupAnalyticsRefresh() {
                 document.getElementById('password').value = 'admin123';
             }
         });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (window.innerWidth >= 768) {
+                // On desktop, ensure sidebar is visible and overlay is hidden
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
     </script>
-
-    <!-- Analytics Section এর পরে এই কোড যোগ করুন -->
-<section id="content-management" class="content-section hidden">
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">কন্টেন্ট ম্যানেজমেন্ট</h2>
-        <p class="text-gray-600">ফ্রন্টএন্ড পেজের সকল কন্টেন্ট এডিট করুন</p>
-    </div>
-
-    <!-- Content Tabs -->
-    <div class="mb-6">
-        <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8">
-                <button id="content-tab-text" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
-                    <i class="fas fa-font mr-2"></i>টেক্সট কন্টেন্ট
-                </button>
-                <button id="content-tab-packages" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-box mr-2"></i>প্যাকেজ ম্যানেজমেন্ট
-                </button>
-                <button id="content-tab-projects" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-project-diagram mr-2"></i>প্রজেক্ট ম্যানেজমেন্ট
-                </button>
-            </nav>
-        </div>
-    </div>
-
-    <!-- Text Content Management -->
-    <div id="text-content-panel" class="content-panel">
-        <div class="mb-6 flex justify-between items-center">
-            <div class="flex space-x-4">
-                <select id="content-page-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
-                    <option value="all">সব পেজ</option>
-                    <option value="home">হোমপেজ</option>
-                    <option value="contact">যোগাযোগ</option>
-                    <option value="services">সার্ভিস</option>
-                </select>
-                <select id="content-section-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
-                    <option value="all">সব সেকশন</option>
-                    <option value="hero">হিরো</option>
-                    <option value="services">সার্ভিস</option>
-                    <option value="contact">যোগাযোগ</option>
-                    <option value="footer">ফুটার</option>
-                </select>
-            </div>
-            <button id="add-content-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                <i class="fas fa-plus mr-2"></i>নতুন কন্টেন্ট
-            </button>
-        </div>
-
-        <!-- Content List -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-8">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কি</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">পেজ</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সেকশন</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কন্টেন্ট</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
-                        </tr>
-                    </thead>
-                    <tbody id="content-list" class="divide-y divide-gray-200">
-                        <!-- Content will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Packages Management -->
-    <div id="packages-panel" class="content-panel hidden">
-        <!-- Similar structure for packages -->
-    </div>
-
-    <!-- Projects Management -->
-    <div id="projects-panel" class="content-panel hidden">
-        <!-- Similar structure for projects -->
-    </div>
-</section>
-
-<!-- Analytics Section - আপডেট করুন -->
-<section id="analytics" class="content-section hidden">
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">ইউজার অ্যানালিটিক্স এবং মনিটরিং</h2>
-        <p class="text-gray-600">বাস্তব সময়ে ভিজিটর ট্র্যাকিং এবং বিহেভিয়ার অ্যানালাইসিস</p>
-    </div>
-
-    <!-- Real-time Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">সক্রিয় ভিজিটর</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="active-visitors">0</h3>
-                </div>
-                <div class="bg-green-100 p-3 rounded-lg">
-                    <i class="fas fa-users text-green-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">আজকের ভিজিটর</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="today-visitors">0</h3>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-lg">
-                    <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">মোট পেজ ভিউ</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="total-pageviews">0</h3>
-                </div>
-                <div class="bg-purple-100 p-3 rounded-lg">
-                    <i class="fas fa-eye text-purple-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">গড় সেশন সময়</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="avg-session">0s</h3>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-lg">
-                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Real-time Visitors -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">রিয়েল-টাইম ভিজিটর</h3>
-            <div id="realtime-visitors" class="h-64 overflow-y-auto">
-                <!-- Real-time visitors will be loaded here -->
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">টপ পেজ ভিউ</h3>
-            <div id="top-pages" class="h-64 overflow-y-auto">
-                <!-- Top pages will be loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Device and Event Analytics -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">ডিভাইস ডিস্ট্রিবিউশন</h3>
-            <div id="device-chart" class="h-64">
-                <!-- Device chart will be loaded here -->
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">ইভেন্ট অ্যানালিটিক্স</h3>
-            <div id="event-chart" class="h-64">
-                <!-- Event analytics will be loaded here -->
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Analytics Section এর পরে এই কোড যোগ করুন -->
-<section id="content-management" class="content-section hidden">
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">কন্টেন্ট ম্যানেজমেন্ট</h2>
-        <p class="text-gray-600">ফ্রন্টএন্ড পেজের সকল কন্টেন্ট এডিট করুন</p>
-    </div>
-
-    <!-- Content Tabs -->
-    <div class="mb-6">
-        <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8">
-                <button id="content-tab-text" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
-                    <i class="fas fa-font mr-2"></i>টেক্সট কন্টেন্ট
-                </button>
-                <button id="content-tab-packages" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-box mr-2"></i>প্যাকেজ ম্যানেজমেন্ট
-                </button>
-                <button id="content-tab-projects" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-project-diagram mr-2"></i>প্রজেক্ট ম্যানেজমেন্ট
-                </button>
-            </nav>
-        </div>
-    </div>
-
-    <!-- Text Content Management -->
-    <div id="text-content-panel" class="content-panel">
-        <div class="mb-6 flex justify-between items-center">
-            <div class="flex space-x-4">
-                <select id="content-page-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
-                    <option value="all">সব পেজ</option>
-                    <option value="home">হোমপেজ</option>
-                    <option value="contact">যোগাযোগ</option>
-                    <option value="services">সার্ভিস</option>
-                </select>
-                <select id="content-section-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
-                    <option value="all">সব সেকশন</option>
-                    <option value="hero">হিরো</option>
-                    <option value="services">সার্ভিস</option>
-                    <option value="contact">যোগাযোগ</option>
-                    <option value="footer">ফুটার</option>
-                </select>
-            </div>
-            <button id="add-content-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                <i class="fas fa-plus mr-2"></i>নতুন কন্টেন্ট
-            </button>
-        </div>
-
-        <!-- Content List -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-8">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কি</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">পেজ</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সেকশন</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কন্টেন্ট</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
-                        </tr>
-                    </thead>
-                    <tbody id="content-list" class="divide-y divide-gray-200">
-                        <!-- Content will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Packages Management -->
-    <div id="packages-panel" class="content-panel hidden">
-        <!-- Similar structure for packages -->
-    </div>
-
-    <!-- Projects Management -->
-    <div id="projects-panel" class="content-panel hidden">
-        <!-- Similar structure for projects -->
-    </div>
-</section>
-
-<!-- Analytics Section - আপডেট করুন -->
-<section id="analytics" class="content-section hidden">
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">ইউজার অ্যানালিটিক্স এবং মনিটরিং</h2>
-        <p class="text-gray-600">বাস্তব সময়ে ভিজিটর ট্র্যাকিং এবং বিহেভিয়ার অ্যানালাইসিস</p>
-    </div>
-
-    <!-- Real-time Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">সক্রিয় ভিজিটর</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="active-visitors">0</h3>
-                </div>
-                <div class="bg-green-100 p-3 rounded-lg">
-                    <i class="fas fa-users text-green-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">আজকের ভিজিটর</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="today-visitors">0</h3>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-lg">
-                    <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">মোট পেজ ভিউ</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="total-pageviews">0</h3>
-                </div>
-                <div class="bg-purple-100 p-3 rounded-lg">
-                    <i class="fas fa-eye text-purple-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">গড় সেশন সময়</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="avg-session">0s</h3>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-lg">
-                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Real-time Visitors -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">রিয়েল-টাইম ভিজিটর</h3>
-            <div id="realtime-visitors" class="h-64 overflow-y-auto">
-                <!-- Real-time visitors will be loaded here -->
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">টপ পেজ ভিউ</h3>
-            <div id="top-pages" class="h-64 overflow-y-auto">
-                <!-- Top pages will be loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Device and Event Analytics -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">ডিভাইস ডিস্ট্রিবিউশন</h3>
-            <div id="device-chart" class="h-64">
-                <!-- Device chart will be loaded here -->
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">ইভেন্ট অ্যানালিটিক্স</h3>
-            <div id="event-chart" class="h-64">
-                <!-- Event analytics will be loaded here -->
-            </div>
-        </div>
-    </div>
-</section>
-
 </body>
 </html>
