@@ -1113,28 +1113,29 @@
             }
         }
 
-        async updateSessionData() {
-            const currentTime = Date.now();
-            const duration = Math.floor((currentTime - this.startTime) / 1000);
-            
-            try {
-                await fetch(`${this.apiBaseUrl}/api/analytics/update`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        sessionId: this.sessionId,
-                        page: this.currentPage,
-                        duration,
-                        scrollDepth: this.scrollDepth
-                    })
-                });
-            } catch (error) {
-                console.error('Session update error:', error);
-            }
-        }
-
+        // frontend/index.html এর মধ্যে AnalyticsTracker ক্লাসের updateSessionData মেথড আপডেট করুন
+async updateSessionData() {
+    const currentTime = Date.now();
+    const duration = Math.floor((currentTime - this.startTime) / 1000);
+    
+    try {
+        // Use a simpler approach - just update duration
+        await fetch(`${this.apiBaseUrl}/api/analytics/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                sessionId: this.sessionId,
+                page: this.currentPage,
+                duration: duration
+            })
+        });
+    } catch (error) {
+        console.error('Session update error:', error);
+        // Don't show error to user, just log it
+    }
+}
         setupScrollTracking() {
             let maxScroll = 0;
             

@@ -1002,89 +1002,165 @@
         }
 
         // Load Analytics
-        async function loadAnalytics() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
-                    headers: {
-                        'Authorization': `Bearer ${currentToken}`,
-                        'Accept': 'application/json'
-                    }
-                });
+        // admin-panel/index.html এর মধ্যে analytics লোড করার ফাংশন আপডেট করুন
+async function loadAnalytics() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update stats cards
+                document.getElementById('active-visitors').textContent = data.stats.activeVisitors || 0;
+                document.getElementById('today-visitors').textContent = data.stats.visitorsToday || 0;
+                document.getElementById('total-pageviews').textContent = data.stats.totalPageViews || 0;
+                document.getElementById('avg-session').textContent = `${data.stats.avgSessionDuration || 0}s`;
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        // Package Distribution
-                        const packageChart = document.getElementById('package-chart');
-                        if (data.packageStats && data.packageStats.length > 0) {
-                            packageChart.innerHTML = '';
-                            data.packageStats.forEach(item => {
-                                const percentage = data.totalContacts > 0 ? 
-                                    ((item.count / data.totalContacts) * 100).toFixed(1) : 0;
-                                const color = item._id === 'প্রিমিয়াম' ? 'bg-purple-600' : 
-                                             item._id === 'স্ট্যান্ডার্ড' ? 'bg-blue-600' : 
-                                             item._id === 'বেস্ট সেলার' ? 'bg-green-600' : 'bg-gray-600';
-                                
-                                const bar = document.createElement('div');
-                                bar.className = 'mb-4';
-                                bar.innerHTML = `
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-gray-700">${item._id || 'N/A'}</span>
-                                        <span class="font-medium">${item.count} (${percentage}%)</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div class="h-full ${color} rounded-full" style="width: ${percentage}%"></div>
-                                    </div>
-                                `;
-                                packageChart.appendChild(bar);
-                            });
-                        } else {
-                            packageChart.innerHTML = '<p class="text-gray-500 text-center py-8">কোন প্যাকেজ ডেটা পাওয়া যায়নি</p>';
-                        }
-                        
-                        // Status Distribution
-                        const statusChart = document.getElementById('status-chart');
-                        const statusData = [
-                            { label: 'নতুন', count: data.newContacts || 0, color: 'bg-blue-600' },
-                            { label: 'যোগাযোগ', count: data.contacted || 0, color: 'bg-yellow-600' },
-                            { label: 'প্রসেসিং', count: data.inProgress || 0, color: 'bg-orange-600' },
-                            { label: 'সম্পন্ন', count: data.completed || 0, color: 'bg-green-600' },
-                            { label: 'বাতিল', count: data.cancelled || 0, color: 'bg-red-600' }
-                        ];
-                        
-                        if (data.totalContacts > 0) {
-                            statusChart.innerHTML = '';
-                            statusData.forEach(item => {
-                                const percentage = ((item.count / data.totalContacts) * 100).toFixed(1);
-                                
-                                const bar = document.createElement('div');
-                                bar.className = 'mb-4';
-                                bar.innerHTML = `
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-gray-700">${item.label}</span>
-                                        <span class="font-medium">${item.count} (${percentage}%)</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div class="h-full ${item.color} rounded-full" style="width: ${percentage}%"></div>
-                                    </div>
-                                `;
-                                statusChart.appendChild(bar);
-                            });
-                        } else {
-                            statusChart.innerHTML = '<p class="text-gray-500 text-center py-8">কোন স্ট্যাটাস ডেটা পাওয়া যায়নি</p>';
-                        }
+                // Update real-time visitors
+                const realtimeDiv = document.getElementById('realtime-visitors');
+                if (data.recentSessions && data.recentSessions.length > 0) {
+                    realtimeDiv.innerHTML = data.recentSessions.map(session => `
+                        <div class="mb-4 p-3 border border-gray-200 rounded-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium text-gray-800">
+                                        <i class="fas fa-user mr-2 text-blue-500"></i>
+                                        ${session.sessionId} (${session.deviceInfo?.type || 'unknown'})
+                                    </p>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <i class="fas fa-globe mr-1"></i>
+                                        ${session.location?.city || 'Unknown'}, ${session.location?.country || 'Unknown'}
+                                    </p>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <i class="fas fa-file-alt mr-1"></i>
+                                        ${session.currentPage} • ${session.pageViews} পেজ ভিউ • ${session.sessionDuration}s
+                                    </p>
+                                </div>
+                                <span class="text-xs text-gray-500">
+                                    ${new Date(session.lastActivity).toLocaleTimeString('bn-BD', {hour: '2-digit', minute:'2-digit'})}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    realtimeDiv.innerHTML = '<p class="text-gray-500 text-center py-8">কোন সক্রিয় ভিজিটর নেই</p>';
+                }
+                
+                // Update top pages
+                const topPagesDiv = document.getElementById('top-pages');
+                if (data.topPages && data.topPages.length > 0) {
+                    topPagesDiv.innerHTML = data.topPages.map((page, index) => `
+                        <div class="mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700">${page.page}</span>
+                                <span class="font-medium">${page.count}</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-600 rounded-full" style="width: ${(page.count / data.stats.totalPageViews) * 100}%"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                // Update device distribution
+                const deviceChart = document.getElementById('device-chart');
+                if (data.deviceDistribution) {
+                    const devices = Object.entries(data.deviceDistribution);
+                    if (devices.length > 0) {
+                        deviceChart.innerHTML = devices.map(([device, count]) => `
+                            <div class="mb-3">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">${device}</span>
+                                    <span class="font-medium">${count}</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full ${device === 'mobile' ? 'bg-green-600' : device === 'desktop' ? 'bg-blue-600' : 'bg-purple-600'} rounded-full" 
+                                         style="width: ${(count / data.stats.totalSessions) * 100}%"></div>
+                                </div>
+                            </div>
+                        `).join('');
                     }
                 }
-            } catch (error) {
-                console.error('Error loading analytics:', error);
-                const packageChart = document.getElementById('package-chart');
-                const statusChart = document.getElementById('status-chart');
-                packageChart.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
-                statusChart.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
+                
+                // Update event analytics
+                const eventChart = document.getElementById('event-chart');
+                if (data.eventCounts) {
+                    const events = Object.entries(data.eventCounts);
+                    if (events.length > 0) {
+                        eventChart.innerHTML = events.map(([event, count]) => `
+                            <div class="mb-3">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">${event}</span>
+                                    <span class="font-medium">${count}</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full ${event === 'click' ? 'bg-red-600' : event === 'scroll' ? 'bg-yellow-600' : 'bg-indigo-600'} rounded-full" 
+                                         style="width: ${Math.min((count / 50) * 100, 100)}%"></div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
             }
         }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        // Don't show error, just update UI
+        document.getElementById('active-visitors').textContent = '0';
+        document.getElementById('today-visitors').textContent = '0';
+        document.getElementById('total-pageviews').textContent = '0';
+        document.getElementById('avg-session').textContent = '0s';
+        
+        document.getElementById('realtime-visitors').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
+        document.getElementById('top-pages').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
+        document.getElementById('device-chart').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
+        document.getElementById('event-chart').innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
+    }
+}
 
+// Real-time analytics refresh function
+async function refreshRealTimeAnalytics() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/analytics/realtime`, {
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('active-visitors').textContent = data.activeVisitors || 0;
+            }
+        }
+    } catch (error) {
+        console.error('Real-time refresh error:', error);
+    }
+}
+
+// Set up periodic refresh for analytics section
+let analyticsRefreshInterval = null;
+
+function setupAnalyticsRefresh() {
+    if (analyticsRefreshInterval) {
+        clearInterval(analyticsRefreshInterval);
+    }
+    
+    // Refresh every 30 seconds when analytics section is active
+    analyticsRefreshInterval = setInterval(() => {
+        const analyticsSection = document.getElementById('analytics');
+        if (!analyticsSection.classList.contains('hidden')) {
+            refreshRealTimeAnalytics();
+        }
+    }, 30000);
+}
         // Update Time
         function updateTime() {
             const now = new Date();
