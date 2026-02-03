@@ -112,6 +112,15 @@
                 </div>
                 
                 <nav class="p-4 space-y-2">
+                      <!-- Existing links... -->
+    <a href="#" data-section="content-management" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
+        <i class="fas fa-edit mr-3"></i>
+        কন্টেন্ট ম্যানেজমেন্ট
+    </a>
+    <a href="#" data-section="analytics" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
+        <i class="fas fa-chart-bar mr-3"></i>
+        অ্যানালিটিক্স মনিটরিং
+    </a>
                     <a href="#" data-section="dashboard-home" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200 active-section">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         ড্যাশবোর্ড
@@ -1375,5 +1384,352 @@
             }
         });
     </script>
+
+    <!-- Analytics Section এর পরে এই কোড যোগ করুন -->
+<section id="content-management" class="content-section hidden">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">কন্টেন্ট ম্যানেজমেন্ট</h2>
+        <p class="text-gray-600">ফ্রন্টএন্ড পেজের সকল কন্টেন্ট এডিট করুন</p>
+    </div>
+
+    <!-- Content Tabs -->
+    <div class="mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8">
+                <button id="content-tab-text" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+                    <i class="fas fa-font mr-2"></i>টেক্সট কন্টেন্ট
+                </button>
+                <button id="content-tab-packages" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-box mr-2"></i>প্যাকেজ ম্যানেজমেন্ট
+                </button>
+                <button id="content-tab-projects" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-project-diagram mr-2"></i>প্রজেক্ট ম্যানেজমেন্ট
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Text Content Management -->
+    <div id="text-content-panel" class="content-panel">
+        <div class="mb-6 flex justify-between items-center">
+            <div class="flex space-x-4">
+                <select id="content-page-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="all">সব পেজ</option>
+                    <option value="home">হোমপেজ</option>
+                    <option value="contact">যোগাযোগ</option>
+                    <option value="services">সার্ভিস</option>
+                </select>
+                <select id="content-section-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="all">সব সেকশন</option>
+                    <option value="hero">হিরো</option>
+                    <option value="services">সার্ভিস</option>
+                    <option value="contact">যোগাযোগ</option>
+                    <option value="footer">ফুটার</option>
+                </select>
+            </div>
+            <button id="add-content-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class="fas fa-plus mr-2"></i>নতুন কন্টেন্ট
+            </button>
+        </div>
+
+        <!-- Content List -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কি</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">পেজ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সেকশন</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কন্টেন্ট</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="content-list" class="divide-y divide-gray-200">
+                        <!-- Content will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Packages Management -->
+    <div id="packages-panel" class="content-panel hidden">
+        <!-- Similar structure for packages -->
+    </div>
+
+    <!-- Projects Management -->
+    <div id="projects-panel" class="content-panel hidden">
+        <!-- Similar structure for projects -->
+    </div>
+</section>
+
+<!-- Analytics Section - আপডেট করুন -->
+<section id="analytics" class="content-section hidden">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">ইউজার অ্যানালিটিক্স এবং মনিটরিং</h2>
+        <p class="text-gray-600">বাস্তব সময়ে ভিজিটর ট্র্যাকিং এবং বিহেভিয়ার অ্যানালাইসিস</p>
+    </div>
+
+    <!-- Real-time Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">সক্রিয় ভিজিটর</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="active-visitors">0</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <i class="fas fa-users text-green-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">আজকের ভিজিটর</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="today-visitors">0</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">মোট পেজ ভিউ</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="total-pageviews">0</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-lg">
+                    <i class="fas fa-eye text-purple-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">গড় সেশন সময়</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="avg-session">0s</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-lg">
+                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Visitors -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">রিয়েল-টাইম ভিজিটর</h3>
+            <div id="realtime-visitors" class="h-64 overflow-y-auto">
+                <!-- Real-time visitors will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">টপ পেজ ভিউ</h3>
+            <div id="top-pages" class="h-64 overflow-y-auto">
+                <!-- Top pages will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Device and Event Analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">ডিভাইস ডিস্ট্রিবিউশন</h3>
+            <div id="device-chart" class="h-64">
+                <!-- Device chart will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">ইভেন্ট অ্যানালিটিক্স</h3>
+            <div id="event-chart" class="h-64">
+                <!-- Event analytics will be loaded here -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Analytics Section এর পরে এই কোড যোগ করুন -->
+<section id="content-management" class="content-section hidden">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">কন্টেন্ট ম্যানেজমেন্ট</h2>
+        <p class="text-gray-600">ফ্রন্টএন্ড পেজের সকল কন্টেন্ট এডিট করুন</p>
+    </div>
+
+    <!-- Content Tabs -->
+    <div class="mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8">
+                <button id="content-tab-text" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+                    <i class="fas fa-font mr-2"></i>টেক্সট কন্টেন্ট
+                </button>
+                <button id="content-tab-packages" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-box mr-2"></i>প্যাকেজ ম্যানেজমেন্ট
+                </button>
+                <button id="content-tab-projects" class="content-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-project-diagram mr-2"></i>প্রজেক্ট ম্যানেজমেন্ট
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Text Content Management -->
+    <div id="text-content-panel" class="content-panel">
+        <div class="mb-6 flex justify-between items-center">
+            <div class="flex space-x-4">
+                <select id="content-page-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="all">সব পেজ</option>
+                    <option value="home">হোমপেজ</option>
+                    <option value="contact">যোগাযোগ</option>
+                    <option value="services">সার্ভিস</option>
+                </select>
+                <select id="content-section-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="all">সব সেকশন</option>
+                    <option value="hero">হিরো</option>
+                    <option value="services">সার্ভিস</option>
+                    <option value="contact">যোগাযোগ</option>
+                    <option value="footer">ফুটার</option>
+                </select>
+            </div>
+            <button id="add-content-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class="fas fa-plus mr-2"></i>নতুন কন্টেন্ট
+            </button>
+        </div>
+
+        <!-- Content List -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কি</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">পেজ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সেকশন</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">কন্টেন্ট</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">স্ট্যাটাস</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="content-list" class="divide-y divide-gray-200">
+                        <!-- Content will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Packages Management -->
+    <div id="packages-panel" class="content-panel hidden">
+        <!-- Similar structure for packages -->
+    </div>
+
+    <!-- Projects Management -->
+    <div id="projects-panel" class="content-panel hidden">
+        <!-- Similar structure for projects -->
+    </div>
+</section>
+
+<!-- Analytics Section - আপডেট করুন -->
+<section id="analytics" class="content-section hidden">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">ইউজার অ্যানালিটিক্স এবং মনিটরিং</h2>
+        <p class="text-gray-600">বাস্তব সময়ে ভিজিটর ট্র্যাকিং এবং বিহেভিয়ার অ্যানালাইসিস</p>
+    </div>
+
+    <!-- Real-time Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">সক্রিয় ভিজিটর</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="active-visitors">0</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <i class="fas fa-users text-green-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">আজকের ভিজিটর</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="today-visitors">0</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">মোট পেজ ভিউ</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="total-pageviews">0</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-lg">
+                    <i class="fas fa-eye text-purple-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600">গড় সেশন সময়</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="avg-session">0s</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-lg">
+                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Visitors -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">রিয়েল-টাইম ভিজিটর</h3>
+            <div id="realtime-visitors" class="h-64 overflow-y-auto">
+                <!-- Real-time visitors will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">টপ পেজ ভিউ</h3>
+            <div id="top-pages" class="h-64 overflow-y-auto">
+                <!-- Top pages will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Device and Event Analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">ডিভাইস ডিস্ট্রিবিউশন</h3>
+            <div id="device-chart" class="h-64">
+                <!-- Device chart will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">ইভেন্ট অ্যানালিটিক্স</h3>
+            <div id="event-chart" class="h-64">
+                <!-- Event analytics will be loaded here -->
+            </div>
+        </div>
+    </div>
+</section>
+
 </body>
 </html>

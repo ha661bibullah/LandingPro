@@ -1,7 +1,7 @@
 {
   "name": "landingpro-backend",
-  "version": "1.0.0",
-  "description": "Backend API for LandingPro admin panel",
+  "version": "2.0.0",
+  "description": "Full Stack Landing Page with Admin Panel, Content Management and Analytics",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -22,7 +22,7 @@
   "engines": {
     "node": ">=16.0.0"
   },
-  "keywords": ["landing-page", "admin-panel", "mongodb", "express"],
+  "keywords": ["landing-page", "admin-panel", "content-management", "analytics", "mongodb", "express"],
   "author": "LandingPro",
   "license": "MIT"
 }

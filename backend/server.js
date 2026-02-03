@@ -1,51 +1,27 @@
-// backend/server.js
+// backend/server.js - আপডেটেড ভার্সন
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+const fs = require('fs').promises;
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS কনফিগারেশন - সব ডোমেইন এর জন্য allow
+// CORS কনফিগারেশন
 const corsOptions = {
-    origin: [
-        'https://ephemeral-buttercream-eb339c.netlify.app',
-        'https://storied-travesseiro-cc792e.netlify.app',
-        'http://localhost:3000',
-        'http://localhost:5500',
-        'http://localhost:8080',
-        '*'
-    ],
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
     credentials: true,
     optionsSuccessStatus: 200
 };
 
-// CORS middleware
 app.use(cors(corsOptions));
-
-// Pre-flight requests handle
-app.options('*', cors(corsOptions));
-
-// Manual CORS headers for all responses
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-    
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-        return res.status(200).json({});
-    }
-    
-    next();
-});
-
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -55,7 +31,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('✅ MongoDB Connected Successfully'))
 .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-// Contact Model
+// ================ SCHEMAS ================
 const ContactSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -71,9 +47,6 @@ const ContactSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-const Contact = mongoose.model('Contact', ContactSchema);
-
-// Admin Model
 const AdminSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -82,7 +55,143 @@ const AdminSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+// Analytics Schema for User Tracking
+const AnalyticsSchema = new mongoose.Schema({
+    sessionId: { type: String, required: true },
+    ipAddress: { type: String },
+    userAgent: { type: String },
+    pageViews: [{
+        page: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        duration: { type: Number }, // seconds
+        scrollDepth: { type: Number }, // percentage
+        referrer: { type: String }
+    }],
+    events: [{
+        type: { type: String, required: true }, // click, form_submit, etc
+        element: { type: String },
+        details: { type: mongoose.Schema.Types.Mixed },
+        timestamp: { type: Date, default: Date.now }
+    }],
+    deviceInfo: {
+        type: { type: String }, // mobile, desktop, tablet
+        browser: { type: String },
+        os: { type: String },
+        screenResolution: { type: String }
+    },
+    location: {
+        country: { type: String },
+        city: { type: String },
+        timezone: { type: String }
+    },
+    startedAt: { type: Date, default: Date.now },
+    lastActivity: { type: Date, default: Date.now },
+    duration: { type: Number, default: 0 } // total session duration in seconds
+});
+
+// Content Management Schema
+const ContentSchema = new mongoose.Schema({
+    page: { type: String, required: true }, // home, services, portfolio, etc
+    section: { type: String, required: true }, // hero, pricing, features, etc
+    type: { type: String, enum: ['text', 'image', 'video', 'list', 'card'], default: 'text' },
+    key: { type: String, required: true, unique: true },
+    title: { type: String },
+    content: { type: mongoose.Schema.Types.Mixed }, // Can be string or array
+    imageUrl: { type: String },
+    altText: { type: String },
+    link: { type: String },
+    order: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    styles: {
+        color: { type: String },
+        bgColor: { type: String },
+        fontSize: { type: String },
+        fontFamily: { type: String },
+        customClass: { type: String }
+    },
+    meta: {
+        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+        createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now }
+    }
+});
+
+// Pricing Packages Schema
+const PackageSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true }, // "বেস্ট সেলার", "স্ট্যান্ডার্ড", "প্রিমিয়াম"
+    title: { type: String, required: true },
+    price: { type: Number, required: true },
+    currency: { type: String, default: 'BDT' },
+    symbol: { type: String, default: '৳' },
+    description: { type: String },
+    features: [{ type: String }],
+    isPopular: { type: Boolean, default: false },
+    order: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    buttonText: { type: String, default: 'প্যাকেজ নির্বাচন করুন' },
+    buttonColor: { type: String, default: 'bg-blue-600' },
+    highlightColor: { type: String, default: 'bg-blue-500' },
+    meta: {
+        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+        createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now }
+    }
+});
+
+// Portfolio Projects Schema
+const ProjectSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    description: { type: String, required: true },
+    shortDescription: { type: String },
+    category: { type: String, default: 'landing-page' },
+    client: { type: String },
+    technologies: [{ type: String }],
+    features: [{ type: String }],
+    imageUrl: { type: String },
+    liveUrl: { type: String },
+    githubUrl: { type: String },
+    colors: {
+        primary: { type: String, default: '#3B82F6' },
+        secondary: { type: String, default: '#8B5CF6' }
+    },
+    order: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    isFeatured: { type: Boolean, default: false },
+    meta: {
+        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+        createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now }
+    }
+});
+
+const Contact = mongoose.model('Contact', ContactSchema);
 const Admin = mongoose.model('Admin', AdminSchema);
+const Analytics = mongoose.model('Analytics', AnalyticsSchema);
+const Content = mongoose.model('Content', ContentSchema);
+const Package = mongoose.model('Package', PackageSchema);
+const Project = mongoose.model('Project', ProjectSchema);
+
+// ================ MIDDLEWARES ================
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Invalid or expired token' });
+        }
+        req.user = user;
+        next();
+    });
+};
 
 // Initialize Admin Account
 const initializeAdmin = async () => {
@@ -104,41 +213,791 @@ const initializeAdmin = async () => {
     }
 };
 
-// Authentication Middleware
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+// Initialize Default Content
+const initializeDefaultContent = async () => {
+    try {
+        const defaultContents = [
+            // Hero Section
+            {
+                page: 'home',
+                section: 'hero',
+                type: 'text',
+                key: 'hero_title',
+                title: 'হিরো শিরোনাম',
+                content: 'পূর্ণ স্ট্যাক ল্যান্ডিং পেজ ডেভেলপমেন্ট'
+            },
+            {
+                page: 'home',
+                section: 'hero',
+                type: 'text',
+                key: 'hero_subtitle',
+                title: 'হিরো সাবটাইটেল',
+                content: 'ল্যান্ডিংপ্রো তৈরি করে উচ্চ-কনভার্শন ল্যান্ডিং পেজ HTML, Tailwind CSS, JavaScript, Node.js, Express.js এবং অন্যান্য আধুনিক টেকনোলজি ব্যবহার করে।'
+            },
+            {
+                page: 'home',
+                section: 'hero',
+                type: 'text',
+                key: 'hero_button_primary',
+                title: 'প্রাথমিক বাটন টেক্সট',
+                content: 'ফ্রি কনসাল্টেশন বুক করুন'
+            },
+            {
+                page: 'home',
+                section: 'hero',
+                type: 'text',
+                key: 'hero_button_secondary',
+                title: 'সেকেন্ডারি বাটন টেক্সট',
+                content: 'আমার কাজ দেখুন'
+            },
+            // Services
+            {
+                page: 'home',
+                section: 'services',
+                type: 'text',
+                key: 'services_title',
+                title: 'সার্ভিস শিরোনাম',
+                content: 'ল্যান্ডিংপ্রো এর স্পেশালাইজড সার্ভিস'
+            },
+            // Contact Info
+            {
+                page: 'home',
+                section: 'contact',
+                type: 'text',
+                key: 'contact_phone',
+                title: 'ফোন নম্বর',
+                content: '+৮৮০ ১৩২৬১৯৮৪৫৬'
+            },
+            {
+                page: 'home',
+                section: 'contact',
+                type: 'text',
+                key: 'contact_email',
+                title: 'ইমেইল',
+                content: 'billaharif661@gmail.com'
+            }
+        ];
 
-    if (!token) {
-        return res.status(401).json({ error: 'Access token required' });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid or expired token' });
+        for (const content of defaultContents) {
+            const exists = await Content.findOne({ key: content.key });
+            if (!exists) {
+                await Content.create({
+                    ...content,
+                    meta: {
+                        createdBy: null,
+                        updatedBy: null
+                    }
+                });
+            }
         }
-        req.user = user;
-        next();
-    });
+        console.log('✅ Default content initialized');
+    } catch (error) {
+        console.error('❌ Error initializing content:', error);
+    }
 };
 
-// Routes
+// Initialize Default Packages
+const initializeDefaultPackages = async () => {
+    try {
+        const defaultPackages = [
+            {
+                name: 'বেস্ট সেলার',
+                title: 'বেস্ট সেলার',
+                price: 2999,
+                description: 'প্রারম্ভিক ব্যবসার জন্য',
+                features: [
+                    '১ পেজ ল্যান্ডিং পেজ',
+                    'HTML + Tailwind CSS',
+                    'বেসিক JavaScript',
+                    'রেসপনসিভ ডিজাইন',
+                    'কন্টাক্ট ফর্ম',
+                    '৭ দিন সাপোর্ট'
+                ],
+                isPopular: false,
+                order: 1
+            },
+            {
+                name: 'স্ট্যান্ডার্ড',
+                title: 'স্ট্যান্ডার্ড',
+                price: 12000,
+                description: 'ফুল ফাংশনাল ল্যান্ডিং পেজের জন্য',
+                features: [
+                    '৩-৫ পেজ ল্যান্ডিং পেজ',
+                    'HTML + Tailwind CSS + JS',
+                    'Node.js + Express.js ব্যাকএন্ড',
+                    'বেসিক REST API',
+                    'ডাটাবেজ কানেকশন (MongoDB)',
+                    'ফর্ম হ্যান্ডলিং ও ভ্যালিডেশন'
+                ],
+                isPopular: true,
+                order: 2,
+                highlightColor: 'bg-blue-500'
+            },
+            {
+                name: 'প্রিমিয়াম',
+                title: 'প্রিমিয়াম',
+                price: 25000,
+                description: 'কাস্টম ও জটিল প্রকল্পের জন্য',
+                features: [
+                    '৫+ পেজ ল্যান্ডিং পেজ',
+                    'সম্পূর্ণ ফুল স্ট্যাক ডেভেলপমেন্ট',
+                    'এডভান্সড API ডেভেলপমেন্ট',
+                    'মাল্টিপল ডাটাবেজ ইন্টিগ্রেশন',
+                    'অ্যাডমিন প্যানেল',
+                    '৩ মাস সাপোর্ট ও মেইনটেনেন্স'
+                ],
+                isPopular: false,
+                order: 3
+            }
+        ];
 
-// Root route
+        for (const pkg of defaultPackages) {
+            const exists = await Package.findOne({ name: pkg.name });
+            if (!exists) {
+                await Package.create({
+                    ...pkg,
+                    meta: {
+                        createdBy: null,
+                        updatedBy: null
+                    }
+                });
+            }
+        }
+        console.log('✅ Default packages initialized');
+    } catch (error) {
+        console.error('❌ Error initializing packages:', error);
+    }
+};
+
+// ================ ROUTES ================
+
+// Health Check
+app.get('/api/health', (req, res) => {
+    const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    res.json({ 
+        success: true,
+        status: 'healthy', 
+        timestamp: new Date().toISOString(),
+        mongodb: mongoStatus,
+        service: 'LandingPro Backend API v2.0'
+    });
+});
+
+// Root
 app.get('/', (req, res) => {
     res.json({ 
-        message: 'LandingPro API is running',
-        version: '1.0.0',
+        message: 'LandingPro API v2.0',
+        version: '2.0.0',
+        features: ['Content Management', 'User Analytics', 'Admin Panel', 'Contact Management'],
         endpoints: {
-            login: '/api/login',
-            contact: '/api/contact',
-            admin: '/api/admin/*',
+            public: ['/api/content', '/api/analytics/track', '/api/contact'],
+            admin: ['/api/admin/*'],
             health: '/api/health'
         }
     });
 });
 
-// Login Route
+// ================ ANALYTICS ROUTES ================
+
+// Track page view
+app.post('/api/analytics/track', async (req, res) => {
+    try {
+        const { 
+            sessionId, 
+            page, 
+            ipAddress, 
+            userAgent, 
+            deviceInfo, 
+            location,
+            referrer,
+            event 
+        } = req.body;
+
+        if (!sessionId || !page) {
+            return res.status(400).json({ error: 'sessionId and page are required' });
+        }
+
+        let analytics = await Analytics.findOne({ sessionId });
+
+        if (!analytics) {
+            // New session
+            analytics = new Analytics({
+                sessionId,
+                ipAddress,
+                userAgent,
+                deviceInfo,
+                location,
+                pageViews: [],
+                events: []
+            });
+        }
+
+        // Add page view
+        analytics.pageViews.push({
+            page,
+            timestamp: new Date(),
+            referrer,
+            duration: 0,
+            scrollDepth: 0
+        });
+
+        // Add event if provided
+        if (event) {
+            analytics.events.push({
+                type: event.type || 'page_view',
+                element: event.element,
+                details: event.details,
+                timestamp: new Date()
+            });
+        }
+
+        analytics.lastActivity = new Date();
+        await analytics.save();
+
+        res.json({ success: true, message: 'Analytics tracked successfully' });
+    } catch (error) {
+        console.error('Analytics tracking error:', error);
+        res.status(500).json({ error: 'Failed to track analytics' });
+    }
+});
+
+// Update session (for duration, scroll depth, etc)
+app.post('/api/analytics/update', async (req, res) => {
+    try {
+        const { sessionId, page, duration, scrollDepth, event } = req.body;
+
+        const analytics = await Analytics.findOne({ sessionId });
+        if (!analytics) {
+            return res.status(404).json({ error: 'Session not found' });
+        }
+
+        // Update last page view
+        const lastPageView = analytics.pageViews[analytics.pageViews.length - 1];
+        if (lastPageView && lastPageView.page === page) {
+            if (duration) lastPageView.duration = duration;
+            if (scrollDepth) lastPageView.scrollDepth = scrollDepth;
+        }
+
+        // Add event if provided
+        if (event) {
+            analytics.events.push({
+                type: event.type,
+                element: event.element,
+                details: event.details,
+                timestamp: new Date()
+            });
+        }
+
+        analytics.lastActivity = new Date();
+        analytics.duration = Math.floor((new Date() - analytics.startedAt) / 1000);
+        
+        await analytics.save();
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Analytics update error:', error);
+        res.status(500).json({ error: 'Failed to update analytics' });
+    }
+});
+
+// Get analytics data (admin only)
+app.get('/api/admin/analytics', authenticateToken, async (req, res) => {
+    try {
+        const { 
+            startDate, 
+            endDate, 
+            page,
+            groupBy = 'day'
+        } = req.query;
+
+        const query = {};
+        
+        // Date filtering
+        if (startDate || endDate) {
+            query.createdAt = {};
+            if (startDate) query.createdAt.$gte = new Date(startDate);
+            if (endDate) query.createdAt.$lte = new Date(endDate);
+        }
+
+        // Page filtering
+        if (page && page !== 'all') {
+            query['pageViews.page'] = page;
+        }
+
+        const analytics = await Analytics.find(query)
+            .sort({ startedAt: -1 })
+            .limit(100);
+
+        // Calculate statistics
+        const totalSessions = analytics.length;
+        const totalPageViews = analytics.reduce((sum, session) => sum + session.pageViews.length, 0);
+        const avgDuration = analytics.length > 0 
+            ? analytics.reduce((sum, session) => sum + session.duration, 0) / analytics.length 
+            : 0;
+
+        // Get top pages
+        const pageCounts = {};
+        analytics.forEach(session => {
+            session.pageViews.forEach(view => {
+                pageCounts[view.page] = (pageCounts[view.page] || 0) + 1;
+            });
+        });
+
+        const topPages = Object.entries(pageCounts)
+            .map(([page, count]) => ({ page, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+
+        // Get device distribution
+        const deviceDistribution = {};
+        analytics.forEach(session => {
+            const device = session.deviceInfo?.type || 'unknown';
+            deviceDistribution[device] = (deviceDistribution[device] || 0) + 1;
+        });
+
+        // Get event counts
+        const eventCounts = {};
+        analytics.forEach(session => {
+            session.events.forEach(event => {
+                eventCounts[event.type] = (eventCounts[event.type] || 0) + 1;
+            });
+        });
+
+        res.json({
+            success: true,
+            stats: {
+                totalSessions,
+                totalPageViews,
+                avgSessionDuration: avgDuration,
+                bounceRate: totalSessions > 0 ? (analytics.filter(s => s.pageViews.length <= 1).length / totalSessions) * 100 : 0
+            },
+            topPages,
+            deviceDistribution,
+            eventCounts,
+            recentSessions: analytics.slice(0, 10)
+        });
+    } catch (error) {
+        console.error('Get analytics error:', error);
+        res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+});
+
+// Get real-time visitors
+app.get('/api/admin/analytics/realtime', authenticateToken, async (req, res) => {
+    try {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        
+        const activeSessions = await Analytics.find({
+            lastActivity: { $gte: fiveMinutesAgo }
+        }).sort({ lastActivity: -1 });
+
+        res.json({
+            success: true,
+            activeVisitors: activeSessions.length,
+            sessions: activeSessions.map(session => ({
+                sessionId: session.sessionId.substring(0, 8),
+                ipAddress: session.ipAddress,
+                location: session.location,
+                deviceInfo: session.deviceInfo,
+                currentPage: session.pageViews.length > 0 ? session.pageViews[session.pageViews.length - 1].page : 'unknown',
+                sessionDuration: session.duration,
+                pageViews: session.pageViews.length,
+                lastActivity: session.lastActivity
+            }))
+        });
+    } catch (error) {
+        console.error('Realtime analytics error:', error);
+        res.status(500).json({ error: 'Failed to fetch realtime analytics' });
+    }
+});
+
+// ================ CONTENT MANAGEMENT ROUTES ================
+
+// Get all content (public)
+app.get('/api/content', async (req, res) => {
+    try {
+        const { page, section } = req.query;
+        const query = { isActive: true };
+        
+        if (page) query.page = page;
+        if (section) query.section = section;
+
+        const content = await Content.find(query).sort({ order: 1 });
+        
+        // Format content as key-value pairs
+        const contentMap = {};
+        content.forEach(item => {
+            contentMap[item.key] = {
+                type: item.type,
+                title: item.title,
+                content: item.content,
+                imageUrl: item.imageUrl,
+                altText: item.altText,
+                link: item.link,
+                styles: item.styles
+            };
+        });
+
+        res.json({ success: true, content: contentMap });
+    } catch (error) {
+        console.error('Get content error:', error);
+        res.status(500).json({ error: 'Failed to fetch content' });
+    }
+});
+
+// Get all content with admin access
+app.get('/api/admin/content', authenticateToken, async (req, res) => {
+    try {
+        const { page, section, search } = req.query;
+        const query = {};
+        
+        if (page && page !== 'all') query.page = page;
+        if (section && section !== 'all') query.section = section;
+        if (search) {
+            query.$or = [
+                { key: { $regex: search, $options: 'i' } },
+                { title: { $regex: search, $options: 'i' } },
+                { content: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const content = await Content.find(query).sort({ page: 1, section: 1, order: 1 });
+        res.json({ success: true, content });
+    } catch (error) {
+        console.error('Get admin content error:', error);
+        res.status(500).json({ error: 'Failed to fetch content' });
+    }
+});
+
+// Get single content item
+app.get('/api/admin/content/:id', authenticateToken, async (req, res) => {
+    try {
+        const content = await Content.findById(req.params.id);
+        if (!content) {
+            return res.status(404).json({ error: 'Content not found' });
+        }
+        res.json({ success: true, content });
+    } catch (error) {
+        console.error('Get content item error:', error);
+        res.status(500).json({ error: 'Failed to fetch content item' });
+    }
+});
+
+// Create/Update content
+app.post('/api/admin/content', authenticateToken, async (req, res) => {
+    try {
+        const { key, page, section, type, title, content, imageUrl, altText, link, order, isActive, styles } = req.body;
+        
+        if (!key || !page || !section || !type) {
+            return res.status(400).json({ error: 'Key, page, section and type are required' });
+        }
+
+        const existingContent = await Content.findOne({ key });
+        let result;
+
+        if (existingContent) {
+            // Update existing
+            existingContent.page = page;
+            existingContent.section = section;
+            existingContent.type = type;
+            existingContent.title = title;
+            existingContent.content = content;
+            existingContent.imageUrl = imageUrl;
+            existingContent.altText = altText;
+            existingContent.link = link;
+            existingContent.order = order || existingContent.order;
+            existingContent.isActive = isActive !== undefined ? isActive : existingContent.isActive;
+            existingContent.styles = styles || existingContent.styles;
+            existingContent.meta.updatedAt = new Date();
+            existingContent.meta.updatedBy = req.user.id;
+
+            result = await existingContent.save();
+        } else {
+            // Create new
+            const newContent = new Content({
+                key,
+                page,
+                section,
+                type,
+                title,
+                content,
+                imageUrl,
+                altText,
+                link,
+                order: order || 0,
+                isActive: isActive !== undefined ? isActive : true,
+                styles,
+                meta: {
+                    createdBy: req.user.id,
+                    updatedBy: req.user.id,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            });
+
+            result = await newContent.save();
+        }
+
+        res.json({
+            success: true,
+            message: existingContent ? 'Content updated successfully' : 'Content created successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Save content error:', error);
+        res.status(500).json({ error: 'Failed to save content' });
+    }
+});
+
+// Delete content
+app.delete('/api/admin/content/:id', authenticateToken, async (req, res) => {
+    try {
+        const content = await Content.findByIdAndDelete(req.params.id);
+        if (!content) {
+            return res.status(404).json({ error: 'Content not found' });
+        }
+        res.json({ success: true, message: 'Content deleted successfully' });
+    } catch (error) {
+        console.error('Delete content error:', error);
+        res.status(500).json({ error: 'Failed to delete content' });
+    }
+});
+
+// ================ PACKAGE MANAGEMENT ROUTES ================
+
+// Get all packages (public)
+app.get('/api/packages', async (req, res) => {
+    try {
+        const packages = await Package.find({ isActive: true }).sort({ order: 1 });
+        res.json({ success: true, packages });
+    } catch (error) {
+        console.error('Get packages error:', error);
+        res.status(500).json({ error: 'Failed to fetch packages' });
+    }
+});
+
+// Get all packages (admin)
+app.get('/api/admin/packages', authenticateToken, async (req, res) => {
+    try {
+        const packages = await Package.find().sort({ order: 1 });
+        res.json({ success: true, packages });
+    } catch (error) {
+        console.error('Get admin packages error:', error);
+        res.status(500).json({ error: 'Failed to fetch packages' });
+    }
+});
+
+// Create/Update package
+app.post('/api/admin/packages', authenticateToken, async (req, res) => {
+    try {
+        const { 
+            id,
+            name, 
+            title, 
+            price, 
+            description, 
+            features, 
+            isPopular, 
+            order, 
+            isActive,
+            buttonText,
+            buttonColor,
+            highlightColor,
+            currency,
+            symbol
+        } = req.body;
+        
+        if (!name || !title || price === undefined) {
+            return res.status(400).json({ error: 'Name, title and price are required' });
+        }
+
+        let packageData;
+        let isNew = false;
+
+        if (id) {
+            packageData = await Package.findById(id);
+            if (!packageData) {
+                return res.status(404).json({ error: 'Package not found' });
+            }
+        } else {
+            packageData = new Package();
+            isNew = true;
+        }
+
+        packageData.name = name;
+        packageData.title = title;
+        packageData.price = price;
+        packageData.description = description;
+        packageData.features = features || [];
+        packageData.isPopular = isPopular || false;
+        packageData.order = order || 0;
+        packageData.isActive = isActive !== undefined ? isActive : true;
+        packageData.buttonText = buttonText || 'প্যাকেজ নির্বাচন করুন';
+        packageData.buttonColor = buttonColor || 'bg-blue-600';
+        packageData.highlightColor = highlightColor || 'bg-blue-500';
+        packageData.currency = currency || 'BDT';
+        packageData.symbol = symbol || '৳';
+
+        if (isNew) {
+            packageData.meta = {
+                createdBy: req.user.id,
+                updatedBy: req.user.id,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+        } else {
+            packageData.meta.updatedBy = req.user.id;
+            packageData.meta.updatedAt = new Date();
+        }
+
+        const result = await packageData.save();
+
+        res.json({
+            success: true,
+            message: isNew ? 'Package created successfully' : 'Package updated successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Save package error:', error);
+        res.status(500).json({ error: 'Failed to save package' });
+    }
+});
+
+// Delete package
+app.delete('/api/admin/packages/:id', authenticateToken, async (req, res) => {
+    try {
+        const packageData = await Package.findByIdAndDelete(req.params.id);
+        if (!packageData) {
+            return res.status(404).json({ error: 'Package not found' });
+        }
+        res.json({ success: true, message: 'Package deleted successfully' });
+    } catch (error) {
+        console.error('Delete package error:', error);
+        res.status(500).json({ error: 'Failed to delete package' });
+    }
+});
+
+// ================ PROJECT MANAGEMENT ROUTES ================
+
+// Get all projects (public)
+app.get('/api/projects', async (req, res) => {
+    try {
+        const projects = await Project.find({ isActive: true }).sort({ order: 1 });
+        res.json({ success: true, projects });
+    } catch (error) {
+        console.error('Get projects error:', error);
+        res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+});
+
+// Get all projects (admin)
+app.get('/api/admin/projects', authenticateToken, async (req, res) => {
+    try {
+        const projects = await Project.find().sort({ order: 1 });
+        res.json({ success: true, projects });
+    } catch (error) {
+        console.error('Get admin projects error:', error);
+        res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+});
+
+// Create/Update project
+app.post('/api/admin/projects', authenticateToken, async (req, res) => {
+    try {
+        const { 
+            id,
+            title,
+            slug,
+            description,
+            shortDescription,
+            category,
+            client,
+            technologies,
+            features,
+            imageUrl,
+            liveUrl,
+            githubUrl,
+            colors,
+            order,
+            isActive,
+            isFeatured
+        } = req.body;
+        
+        if (!title || !slug || !description) {
+            return res.status(400).json({ error: 'Title, slug and description are required' });
+        }
+
+        let project;
+        let isNew = false;
+
+        if (id) {
+            project = await Project.findById(id);
+            if (!project) {
+                return res.status(404).json({ error: 'Project not found' });
+            }
+        } else {
+            project = new Project();
+            isNew = true;
+        }
+
+        project.title = title;
+        project.slug = slug;
+        project.description = description;
+        project.shortDescription = shortDescription;
+        project.category = category || 'landing-page';
+        project.client = client;
+        project.technologies = technologies || [];
+        project.features = features || [];
+        project.imageUrl = imageUrl;
+        project.liveUrl = liveUrl;
+        project.githubUrl = githubUrl;
+        project.colors = colors || { primary: '#3B82F6', secondary: '#8B5CF6' };
+        project.order = order || 0;
+        project.isActive = isActive !== undefined ? isActive : true;
+        project.isFeatured = isFeatured || false;
+
+        if (isNew) {
+            project.meta = {
+                createdBy: req.user.id,
+                updatedBy: req.user.id,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+        } else {
+            project.meta.updatedBy = req.user.id;
+            project.meta.updatedAt = new Date();
+        }
+
+        const result = await project.save();
+
+        res.json({
+            success: true,
+            message: isNew ? 'Project created successfully' : 'Project updated successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Save project error:', error);
+        res.status(500).json({ error: 'Failed to save project' });
+    }
+});
+
+// Delete project
+app.delete('/api/admin/projects/:id', authenticateToken, async (req, res) => {
+    try {
+        const project = await Project.findByIdAndDelete(req.params.id);
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        res.json({ success: true, message: 'Project deleted successfully' });
+    } catch (error) {
+        console.error('Delete project error:', error);
+        res.status(500).json({ error: 'Failed to delete project' });
+    }
+});
+
+// ================ EXISTING ROUTES (Updated) ================
+
+// Login Route (unchanged but included for completeness)
 app.post('/api/login', async (req, res) => {
     try {
         console.log('Login attempt:', req.body.email);
@@ -161,11 +1020,9 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Update last login
         admin.lastLogin = new Date();
         await admin.save();
 
-        // Generate JWT token
         const token = jwt.sign(
             { id: admin._id, email: admin.email, role: admin.role },
             process.env.JWT_SECRET,
@@ -190,7 +1047,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Submit Contact Form (Public)
+// Submit Contact Form (updated to save to database)
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, phone, package, message } = req.body;
@@ -209,7 +1066,6 @@ app.post('/api/contact', async (req, res) => {
 
         await contact.save();
         
-        // Log to console for debugging
         console.log('📧 New contact submission:', {
             name,
             email,
@@ -229,9 +1085,7 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// Admin Routes (Protected)
-
-// Get all contacts with pagination and filtering
+// Admin contact routes (unchanged)
 app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
     try {
         const { 
@@ -245,12 +1099,10 @@ app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
 
         const query = {};
         
-        // Filter by status
         if (status && status !== 'all') {
             query.status = status;
         }
         
-        // Search by name, email, or message
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
@@ -286,78 +1138,7 @@ app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
     }
 });
 
-// Get single contact
-app.get('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
-    try {
-        const contact = await Contact.findById(req.params.id);
-        if (!contact) {
-            return res.status(404).json({ error: 'Contact not found' });
-        }
-        res.json({
-            success: true,
-            contact
-        });
-    } catch (error) {
-        console.error('Get contact error:', error);
-        res.status(500).json({ error: 'Failed to fetch contact' });
-    }
-});
-
-// Update contact status
-app.put('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
-    try {
-        const { status } = req.body;
-        
-        if (!status) {
-            return res.status(400).json({ error: 'Status is required' });
-        }
-        
-        const updateData = { 
-            status,
-            updatedAt: new Date()
-        };
-
-        const contact = await Contact.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true }
-        );
-
-        if (!contact) {
-            return res.status(404).json({ error: 'Contact not found' });
-        }
-
-        res.json({
-            success: true,
-            message: 'Contact updated successfully',
-            data: contact
-        });
-    } catch (error) {
-        console.error('Update contact error:', error);
-        res.status(500).json({ error: 'Failed to update contact' });
-    }
-});
-
-// Delete contact
-app.delete('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
-    try {
-        const contact = await Contact.findByIdAndDelete(req.params.id);
-        
-        if (!contact) {
-            return res.status(404).json({ error: 'Contact not found' });
-        }
-
-        res.json({
-            success: true,
-            message: 'Contact deleted successfully'
-        });
-    } catch (error) {
-        console.error('Delete contact error:', error);
-        res.status(500).json({ error: 'Failed to delete contact' });
-    }
-});
-
-// Get dashboard statistics
+// Get dashboard statistics (updated with content counts)
 app.get('/api/admin/stats', authenticateToken, async (req, res) => {
     try {
         const totalContacts = await Contact.countDocuments();
@@ -367,13 +1148,24 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
         const completed = await Contact.countDocuments({ status: 'completed' });
         const cancelled = await Contact.countDocuments({ status: 'cancelled' });
 
-        // Get last 7 days data
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const recentContacts = await Contact.countDocuments({
-            createdAt: { $gte: sevenDaysAgo }
+        // Analytics stats
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const visitorsToday = await Analytics.countDocuments({
+            startedAt: { $gte: today }
         });
+
+        const totalVisitors = await Analytics.countDocuments();
+        const totalPageViews = await Analytics.aggregate([
+            { $project: { count: { $size: "$pageViews" } } },
+            { $group: { _id: null, total: { $sum: "$count" } } }
+        ]);
+
+        // Content stats
+        const totalContent = await Content.countDocuments();
+        const activeContent = await Content.countDocuments({ isActive: true });
+        const totalPackages = await Package.countDocuments();
+        const totalProjects = await Project.countDocuments();
 
         // Package distribution
         const packageStats = await Contact.aggregate([
@@ -395,9 +1187,19 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
             inProgress,
             completed,
             cancelled,
-            recentContacts,
             packageStats,
-            statusStats
+            statusStats,
+            analytics: {
+                visitorsToday,
+                totalVisitors,
+                totalPageViews: totalPageViews[0]?.total || 0
+            },
+            content: {
+                totalContent,
+                activeContent,
+                totalPackages,
+                totalProjects
+            }
         });
     } catch (error) {
         console.error('Get stats error:', error);
@@ -405,7 +1207,7 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
     }
 });
 
-// Verify token (for auto-login)
+// Verify token
 app.get('/api/admin/verify', authenticateToken, async (req, res) => {
     try {
         const admin = await Admin.findById(req.user.id);
@@ -428,20 +1230,7 @@ app.get('/api/admin/verify', authenticateToken, async (req, res) => {
     }
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-    
-    res.json({ 
-        success: true,
-        status: 'healthy', 
-        timestamp: new Date().toISOString(),
-        mongodb: mongoStatus,
-        service: 'LandingPro Backend API'
-    });
-});
-
-// 404 handler
+// ================ 404 HANDLER ================
 app.use('*', (req, res) => {
     res.status(404).json({
         success: false,
@@ -451,42 +1240,40 @@ app.use('*', (req, res) => {
             login: '/api/login',
             contact: '/api/contact',
             health: '/api/health',
+            content: '/api/content',
+            packages: '/api/packages',
+            projects: '/api/projects',
+            analytics: '/api/analytics/track',
             admin: {
                 contacts: '/api/admin/contacts',
                 stats: '/api/admin/stats',
-                verify: '/api/admin/verify'
+                verify: '/api/admin/verify',
+                content: '/api/admin/content',
+                packages: '/api/admin/packages',
+                projects: '/api/admin/projects',
+                analytics: '/api/admin/analytics'
             }
         }
     });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Server error:', err);
-    res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        message: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
-
-// Initialize and start server
+// ================ SERVER INITIALIZATION ================
 const startServer = async () => {
     await initializeAdmin();
+    await initializeDefaultContent();
+    await initializeDefaultPackages();
     
     app.listen(PORT, () => {
         console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`🌐 CORS enabled for all origins`);
-        console.log(`📊 MongoDB URI: ${process.env.MONGODB_URI ? 'Configured' : 'Not configured'}`);
+        console.log(`📊 Dashboard: http://localhost:${PORT}`);
+        console.log(`📡 API Health: http://localhost:${PORT}/api/health`);
         console.log(`🔑 Admin Email: ${process.env.ADMIN_EMAIL}`);
-        console.log(`🔒 JWT Secret: ${process.env.JWT_SECRET ? 'Set' : 'Not set'}`);
-        console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
+        console.log(`📁 Features: Content Management, User Analytics, Admin Panel`);
     });
 };
 
 startServer();
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
     console.error('Unhandled Promise Rejection:', err);
 });
