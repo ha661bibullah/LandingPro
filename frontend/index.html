@@ -972,7 +972,7 @@
     class AnalyticsTracker {
         constructor() {
             this.sessionId = this.generateSessionId();
-            this.apiBaseUrl = 'https://landingpro-3alp.onrender.com';
+            this.apiBaseUrl = 'https://landingpro-call.onrender.com';
             this.currentPage = this.getCurrentPage();
             this.startTime = Date.now();
             this.lastActivity = Date.now();
@@ -1447,5 +1447,120 @@ async updateSessionData() {
     });
 </script>
 
+
+<script>
+    class SimpleAnalytics {
+        constructor() {
+            this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            this.apiBaseUrl = 'https://landingpro-call.onrender.com'; // আপনার রেন্ডার URL
+            this.page = this.getPageName();
+            this.startTime = Date.now();
+            
+            this.init();
+        }
+        
+        getPageName() {
+            const path = window.location.pathname;
+            return path.includes('contact') ? 'contact' : 
+                   path.includes('portfolio') ? 'portfolio' : 
+                   path.includes('services') ? 'services' : 
+                   path.includes('pricing') ? 'pricing' : 'home';
+        }
+        
+        getDeviceType() {
+            const userAgent = navigator.userAgent;
+            if (/mobile|android|iphone|ipad|ipod/i.test(userAgent)) return 'mobile';
+            if (/tablet|ipad/i.test(userAgent)) return 'tablet';
+            return 'desktop';
+        }
+        
+        async trackPageView() {
+            try {
+                await fetch(`${this.apiBaseUrl}/api/analytics/track`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: this.sessionId,
+                        page: this.page,
+                        referrer: document.referrer || 'direct',
+                        deviceType: this.getDeviceType()
+                    })
+                });
+                
+                console.log('📊 Page view tracked');
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        async trackEvent(type, element) {
+            try {
+                await fetch(`${this.apiBaseUrl}/api/analytics/event`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: this.sessionId,
+                        type: type,
+                        element: element
+                    })
+                });
+            } catch (error) {
+                // Silent fail
+            }
+        }
+        
+        async updateSession() {
+            const duration = Math.floor((Date.now() - this.startTime) / 1000);
+            
+            try {
+                await fetch(`${this.apiBaseUrl}/api/analytics/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: this.sessionId,
+                        duration: duration
+                    })
+                });
+            } catch (error) {
+                // Silent fail
+            }
+        }
+        
+        init() {
+            // Initial page view
+            this.trackPageView();
+            
+            // Track button clicks
+            document.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                    const button = e.target.tagName === 'BUTTON' ? e.target : e.target.closest('button');
+                    const text = button.textContent.trim().substring(0, 50);
+                    this.trackEvent('click', `button:${text}`);
+                }
+                
+                if (e.target.tagName === 'A') {
+                    const text = e.target.textContent.trim().substring(0, 50);
+                    this.trackEvent('click', `link:${text}`);
+                }
+            });
+            
+            // Track form submissions
+            document.addEventListener('submit', (e) => {
+                this.trackEvent('form_submit', e.target.id || 'form');
+            });
+            
+            // Update session periodically
+            setInterval(() => this.updateSession(), 30000);
+            
+            // Final update before unload
+            window.addEventListener('beforeunload', () => this.updateSession());
+        }
+    }
+    
+    // Initialize analytics when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        window.analytics = new SimpleAnalytics();
+    });
+</script>
 </body>
 </html>
