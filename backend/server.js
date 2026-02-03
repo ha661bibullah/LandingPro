@@ -9,11 +9,42 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({
-    origin: ['https://ephemeral-buttercream-eb339c.netlify.app', 'http://localhost:3000'],
-    credentials: true
-}));
+// CORS কনফিগারেশন - সব ডোমেইন এর জন্য allow
+const corsOptions = {
+    origin: [
+        'https://ephemeral-buttercream-eb339c.netlify.app',
+        'https://storied-travesseiro-cc792e.netlify.app',
+        'http://localhost:3000',
+        'http://localhost:5500',
+        'http://localhost:8080',
+        '*'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
+// CORS middleware
+app.use(cors(corsOptions));
+
+// Pre-flight requests handle
+app.options('*', cors(corsOptions));
+
+// Manual CORS headers for all responses
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.status(200).json({});
+    }
+    
+    next();
+});
+
 app.use(express.json());
 
 // MongoDB Connection
@@ -65,6 +96,8 @@ const initializeAdmin = async () => {
             });
             await admin.save();
             console.log('✅ Admin account created successfully');
+        } else {
+            console.log('✅ Admin account already exists');
         }
     } catch (error) {
         console.error('❌ Error creating admin account:', error);
@@ -91,18 +124,40 @@ const authenticateToken = (req, res, next) => {
 
 // Routes
 
+// Root route
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'LandingPro API is running',
+        version: '1.0.0',
+        endpoints: {
+            login: '/api/login',
+            contact: '/api/contact',
+            admin: '/api/admin/*',
+            health: '/api/health'
+        }
+    });
+});
+
 // Login Route
 app.post('/api/login', async (req, res) => {
     try {
+        console.log('Login attempt:', req.body.email);
+        
         const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
         
         const admin = await Admin.findOne({ email });
         if (!admin) {
+            console.log('Admin not found:', email);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         const validPassword = await bcrypt.compare(password, admin.password);
         if (!validPassword) {
+            console.log('Invalid password for:', email);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -117,7 +172,10 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        console.log('Login successful for:', email);
+        
         res.json({
+            success: true,
             token,
             admin: {
                 id: admin._id,
@@ -136,6 +194,10 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, phone, package, message } = req.body;
+        
+        if (!name || !email || !message) {
+            return res.status(400).json({ error: 'Name, email and message are required' });
+        }
         
         const contact = new Contact({
             name,
@@ -209,6 +271,7 @@ app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
         const totalPages = Math.ceil(total / limit);
 
         res.json({
+            success: true,
             contacts,
             pagination: {
                 page: parseInt(page),
@@ -230,7 +293,10 @@ app.get('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
         if (!contact) {
             return res.status(404).json({ error: 'Contact not found' });
         }
-        res.json(contact);
+        res.json({
+            success: true,
+            contact
+        });
     } catch (error) {
         console.error('Get contact error:', error);
         res.status(500).json({ error: 'Failed to fetch contact' });
@@ -240,7 +306,12 @@ app.get('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
 // Update contact status
 app.put('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
     try {
-        const { status, notes } = req.body;
+        const { status } = req.body;
+        
+        if (!status) {
+            return res.status(400).json({ error: 'Status is required' });
+        }
+        
         const updateData = { 
             status,
             updatedAt: new Date()
@@ -294,6 +365,7 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
         const contacted = await Contact.countDocuments({ status: 'contacted' });
         const inProgress = await Contact.countDocuments({ status: 'in_progress' });
         const completed = await Contact.countDocuments({ status: 'completed' });
+        const cancelled = await Contact.countDocuments({ status: 'cancelled' });
 
         // Get last 7 days data
         const sevenDaysAgo = new Date();
@@ -309,14 +381,23 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
             { $sort: { count: -1 } }
         ]);
 
+        // Status distribution
+        const statusStats = await Contact.aggregate([
+            { $group: { _id: '$status', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
         res.json({
+            success: true,
             totalContacts,
             newContacts,
             contacted,
             inProgress,
             completed,
+            cancelled,
             recentContacts,
-            packageStats
+            packageStats,
+            statusStats
         });
     } catch (error) {
         console.error('Get stats error:', error);
@@ -324,12 +405,68 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
     }
 });
 
+// Verify token (for auto-login)
+app.get('/api/admin/verify', authenticateToken, async (req, res) => {
+    try {
+        const admin = await Admin.findById(req.user.id);
+        if (!admin) {
+            return res.status(404).json({ error: 'Admin not found' });
+        }
+        
+        res.json({
+            success: true,
+            admin: {
+                id: admin._id,
+                email: admin.email,
+                role: admin.role,
+                lastLogin: admin.lastLogin
+            }
+        });
+    } catch (error) {
+        console.error('Verify token error:', error);
+        res.status(500).json({ error: 'Failed to verify token' });
+    }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+    const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    
     res.json({ 
+        success: true,
         status: 'healthy', 
         timestamp: new Date().toISOString(),
-        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        mongodb: mongoStatus,
+        service: 'LandingPro Backend API'
+    });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Endpoint not found',
+        availableEndpoints: {
+            home: '/',
+            login: '/api/login',
+            contact: '/api/contact',
+            health: '/api/health',
+            admin: {
+                contacts: '/api/admin/contacts',
+                stats: '/api/admin/stats',
+                verify: '/api/admin/verify'
+            }
+        }
+    });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
@@ -339,9 +476,11 @@ const startServer = async () => {
     
     app.listen(PORT, () => {
         console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`🌐 CORS enabled for all origins`);
         console.log(`📊 MongoDB URI: ${process.env.MONGODB_URI ? 'Configured' : 'Not configured'}`);
         console.log(`🔑 Admin Email: ${process.env.ADMIN_EMAIL}`);
         console.log(`🔒 JWT Secret: ${process.env.JWT_SECRET ? 'Set' : 'Not set'}`);
+        console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
     });
 };
 

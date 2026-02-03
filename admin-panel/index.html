@@ -420,9 +420,9 @@
         </div>
     </div>
 
-    <script>
-        // API Configuration
-        const API_BASE_URL = 'https://landingpro-3alp.onrender.com/api';
+       <script>
+        // API Configuration - একবার /api লিখুন
+        const API_BASE_URL = 'https://landingpro-3alp.onrender.com';
         let currentToken = null;
         let currentAdmin = null;
         let currentPage = 1;
@@ -447,6 +447,16 @@
             
             toastIcon.className = `fas ${icons[type] || 'fa-info-circle'} mr-3`;
             
+            // Set background color based on type
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                info: 'bg-blue-600',
+                warning: 'bg-yellow-600'
+            };
+            
+            toast.className = `fixed bottom-4 right-4 z-50 ${colors[type] || 'bg-gray-800'} text-white px-6 py-4 rounded-lg shadow-lg max-w-sm`;
+            
             // Show toast
             toast.classList.remove('hidden');
             
@@ -465,22 +475,38 @@
             const loginBtn = document.getElementById('login-btn');
             const errorDiv = document.getElementById('login-error');
             
+            // Clear previous errors
+            errorDiv.classList.add('hidden');
+            errorDiv.textContent = '';
+            
             // Show loading
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
             loginBtn.disabled = true;
             
             try {
+                console.log('Attempting login to:', `${API_BASE_URL}/api/login`);
+                
                 const response = await fetch(`${API_BASE_URL}/api/login`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
+                    mode: 'cors',
                     body: JSON.stringify({ email, password })
                 });
                 
-                const data = await response.json();
+                console.log('Response status:', response.status);
                 
-                if (response.ok) {
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('Invalid server response');
+                }
+                
+                if (response.ok && data.success) {
                     // Save token and admin data
                     currentToken = data.token;
                     currentAdmin = data.admin;
@@ -502,9 +528,10 @@
                     throw new Error(data.error || 'লগইন ব্যর্থ হয়েছে');
                 }
             } catch (error) {
-                errorDiv.textContent = error.message;
+                console.error('Login error details:', error);
+                errorDiv.textContent = error.message || 'নেটওয়ার্ক ত্রুটি হয়েছে। দয়া করে আবার চেষ্টা করুন।';
                 errorDiv.classList.remove('hidden');
-                showToast(error.message, 'error');
+                showToast(error.message || 'লগইন ব্যর্থ হয়েছে', 'error');
             } finally {
                 // Reset button
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>লগইন';
@@ -527,6 +554,9 @@
             // Clear form
             document.getElementById('login-form').reset();
             
+            // Close dropdown
+            document.getElementById('dropdown-menu').classList.add('hidden');
+            
             showToast('সফলভাবে লগআউট করা হয়েছে', 'info');
         });
 
@@ -534,9 +564,13 @@
         function initDashboard() {
             // Set admin info
             document.getElementById('admin-email').textContent = currentAdmin.email;
-            document.getElementById('last-login').textContent = currentAdmin.lastLogin ? 
-                `শেষ লগইন: ${new Date(currentAdmin.lastLogin).toLocaleString('bn-BD')}` : 
-                'প্রথম লগইন';
+            if (currentAdmin.lastLogin) {
+                const lastLoginDate = new Date(currentAdmin.lastLogin);
+                document.getElementById('last-login').textContent = 
+                    `শেষ লগইন: ${lastLoginDate.toLocaleDateString('bn-BD')} ${lastLoginDate.toLocaleTimeString('bn-BD')}`;
+            } else {
+                document.getElementById('last-login').textContent = 'প্রথম লগইন';
+            }
             
             // Load dashboard data
             loadDashboardStats();
@@ -547,6 +581,37 @@
             
             // Set up event listeners
             setupEventListeners();
+            
+            // Test API connection
+            testAPIConnection();
+        }
+
+        // Test API Connection
+        async function testAPIConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                const data = await response.json();
+                
+                const statusElement = document.getElementById('api-status');
+                const statusText = document.getElementById('api-status-text');
+                
+                if (response.ok && data.success) {
+                    statusElement.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+                    statusText.textContent = 'API কানেক্টেড - সার্ভার সচল';
+                    statusText.className = 'text-green-600';
+                } else {
+                    statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+                    statusText.textContent = 'API সংযোগ সমস্যা';
+                    statusText.className = 'text-red-600';
+                }
+            } catch (error) {
+                const statusElement = document.getElementById('api-status');
+                const statusText = document.getElementById('api-status-text');
+                
+                statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+                statusText.textContent = 'API ডিসকানেক্টেড';
+                statusText.className = 'text-red-600';
+            }
         }
 
         // Load Dashboard Statistics
@@ -554,20 +619,26 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
                     headers: {
-                        'Authorization': `Bearer ${currentToken}`
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json'
                     }
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
                     
-                    document.getElementById('total-contacts').textContent = data.totalContacts;
-                    document.getElementById('new-contacts').textContent = data.newContacts;
-                    document.getElementById('processing-contacts').textContent = data.contacted + data.inProgress;
-                    document.getElementById('completed-contacts').textContent = data.completed;
+                    if (data.success) {
+                        document.getElementById('total-contacts').textContent = data.totalContacts || 0;
+                        document.getElementById('new-contacts').textContent = data.newContacts || 0;
+                        document.getElementById('processing-contacts').textContent = (data.contacted || 0) + (data.inProgress || 0);
+                        document.getElementById('completed-contacts').textContent = data.completed || 0;
+                    }
+                } else {
+                    throw new Error('Failed to load statistics');
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
+                showToast('পরিসংখ্যান লোড করতে সমস্যা হয়েছে', 'error');
             }
         }
 
@@ -576,7 +647,8 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/admin/contacts?limit=5&sortOrder=desc`, {
                     headers: {
-                        'Authorization': `Bearer ${currentToken}`
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json'
                     }
                 });
                 
@@ -585,53 +657,73 @@
                     const tbody = document.getElementById('recent-contacts');
                     tbody.innerHTML = '';
                     
-                    data.contacts.forEach(contact => {
-                        const row = document.createElement('tr');
-                        
-                        const statusColors = {
-                            new: 'bg-blue-100 text-blue-800',
-                            contacted: 'bg-yellow-100 text-yellow-800',
-                            in_progress: 'bg-orange-100 text-orange-800',
-                            completed: 'bg-green-100 text-green-800',
-                            cancelled: 'bg-red-100 text-red-800'
-                        };
-                        
-                        const statusText = {
-                            new: 'নতুন',
-                            contacted: 'যোগাযোগ করা হয়েছে',
-                            in_progress: 'প্রসেসিং',
-                            completed: 'সম্পন্ন',
-                            cancelled: 'বাতিল'
-                        };
-                        
-                        row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="font-medium text-gray-900">${contact.name}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-gray-900">${contact.email}</div>
-                                <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                                    ${contact.package || 'N/A'}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
-                                    ${statusText[contact.status] || contact.status}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${new Date(contact.createdAt).toLocaleDateString('bn-BD')}
-                            </td>
+                    if (data.success && data.contacts && data.contacts.length > 0) {
+                        data.contacts.forEach(contact => {
+                            const row = document.createElement('tr');
+                            
+                            const statusColors = {
+                                new: 'bg-blue-100 text-blue-800',
+                                contacted: 'bg-yellow-100 text-yellow-800',
+                                in_progress: 'bg-orange-100 text-orange-800',
+                                completed: 'bg-green-100 text-green-800',
+                                cancelled: 'bg-red-100 text-red-800'
+                            };
+                            
+                            const statusText = {
+                                new: 'নতুন',
+                                contacted: 'যোগাযোগ করা হয়েছে',
+                                in_progress: 'প্রসেসিং',
+                                completed: 'সম্পন্ন',
+                                cancelled: 'বাতিল'
+                            };
+                            
+                            row.innerHTML = `
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-gray-900">${contact.name || 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-gray-900">${contact.email || 'N/A'}</div>
+                                    <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                        ${contact.package || 'N/A'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
+                                        ${statusText[contact.status] || contact.status || 'N/A'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('bn-BD') : 'N/A'}
+                                </td>
+                            `;
+                            
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                    <i class="fas fa-inbox text-3xl mb-2"></i>
+                                    <p>কোন কন্টাক্ট পাওয়া যায়নি</p>
+                                </td>
+                            </tr>
                         `;
-                        
-                        tbody.appendChild(row);
-                    });
+                    }
                 }
             } catch (error) {
                 console.error('Error loading recent contacts:', error);
+                const tbody = document.getElementById('recent-contacts');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-red-500">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                            <p>ডেটা লোড করতে সমস্যা হয়েছে</p>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
@@ -646,7 +738,8 @@
                 
                 const response = await fetch(`${API_BASE_URL}/api/admin/contacts?${params}`, {
                     headers: {
-                        'Authorization': `Bearer ${currentToken}`
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json'
                     }
                 });
                 
@@ -655,76 +748,102 @@
                     const tbody = document.getElementById('contacts-table');
                     tbody.innerHTML = '';
                     
-                    data.contacts.forEach(contact => {
-                        const row = document.createElement('tr');
-                        
-                        const statusColors = {
-                            new: 'bg-blue-100 text-blue-800',
-                            contacted: 'bg-yellow-100 text-yellow-800',
-                            in_progress: 'bg-orange-100 text-orange-800',
-                            completed: 'bg-green-100 text-green-800',
-                            cancelled: 'bg-red-100 text-red-800'
-                        };
-                        
-                        const statusText = {
-                            new: 'নতুন',
-                            contacted: 'যোগাযোগ করা হয়েছে',
-                            in_progress: 'প্রসেসিং',
-                            completed: 'সম্পন্ন',
-                            cancelled: 'বাতিল'
-                        };
-                        
-                        row.innerHTML = `
-                            <td class="px-6 py-4">
-                                <div class="font-medium text-gray-900">${contact.name}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-gray-900">${contact.email}</div>
-                                <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                                    ${contact.package || 'N/A'}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
-                                    ${statusText[contact.status] || contact.status}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
-                                ${new Date(contact.createdAt).toLocaleDateString('bn-BD')}
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                <button onclick="viewContactDetails('${contact._id}')" class="text-blue-600 hover:text-blue-900 mr-3">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button onclick="updateContactStatus('${contact._id}', 'completed')" class="text-green-600 hover:text-green-900 mr-3">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button onclick="deleteContact('${contact._id}')" class="text-red-600 hover:text-red-900">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
+                    if (data.success && data.contacts && data.contacts.length > 0) {
+                        data.contacts.forEach(contact => {
+                            const row = document.createElement('tr');
+                            
+                            const statusColors = {
+                                new: 'bg-blue-100 text-blue-800',
+                                contacted: 'bg-yellow-100 text-yellow-800',
+                                in_progress: 'bg-orange-100 text-orange-800',
+                                completed: 'bg-green-100 text-green-800',
+                                cancelled: 'bg-red-100 text-red-800'
+                            };
+                            
+                            const statusText = {
+                                new: 'নতুন',
+                                contacted: 'যোগাযোগ করা হয়েছে',
+                                in_progress: 'প্রসেসিং',
+                                completed: 'সম্পন্ন',
+                                cancelled: 'বাতিল'
+                            };
+                            
+                            row.innerHTML = `
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-gray-900">${contact.name || 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-gray-900">${contact.email || 'N/A'}</div>
+                                    <div class="text-gray-500 text-sm">${contact.phone || 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                        ${contact.package || 'N/A'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 text-xs rounded-full ${statusColors[contact.status] || 'bg-gray-100 text-gray-800'}">
+                                        ${statusText[contact.status] || contact.status || 'N/A'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    ${contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('bn-BD') : 'N/A'}
+                                </td>
+                                <td class="px-6 py-4 text-sm">
+                                    <button onclick="viewContactDetails('${contact._id}')" class="text-blue-600 hover:text-blue-900 mr-3" title="ডিটেইলস দেখুন">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="updateContactStatus('${contact._id}', 'completed')" class="text-green-600 hover:text-green-900 mr-3" title="সম্পন্ন করুন">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button onclick="deleteContact('${contact._id}')" class="text-red-600 hover:text-red-900" title="ডিলিট করুন">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <i class="fas fa-inbox text-4xl mb-3"></i>
+                                    <p class="text-lg">কোন কন্টাক্ট পাওয়া যায়নি</p>
+                                    <p class="text-sm mt-2">ফিল্টার পরিবর্তন করুন বা নতুন কন্টাক্ট যোগ করুন</p>
+                                </td>
+                            </tr>
                         `;
-                        
-                        tbody.appendChild(row);
-                    });
+                    }
                     
                     // Update pagination info
-                    document.getElementById('page-start').textContent = ((page - 1) * currentLimit) + 1;
-                    document.getElementById('page-end').textContent = Math.min(page * currentLimit, data.pagination.total);
-                    document.getElementById('total-entries').textContent = data.pagination.total;
-                    document.getElementById('current-page').textContent = page;
-                    
-                    // Update pagination buttons
-                    document.getElementById('prev-page').disabled = page <= 1;
-                    document.getElementById('next-page').disabled = page >= data.pagination.totalPages;
+                    if (data.pagination) {
+                        document.getElementById('page-start').textContent = ((page - 1) * currentLimit) + 1;
+                        document.getElementById('page-end').textContent = Math.min(page * currentLimit, data.pagination.total);
+                        document.getElementById('total-entries').textContent = data.pagination.total;
+                        document.getElementById('current-page').textContent = page;
+                        
+                        // Update pagination buttons
+                        document.getElementById('prev-page').disabled = page <= 1;
+                        document.getElementById('next-page').disabled = page >= data.pagination.totalPages;
+                    }
                     
                     currentPage = page;
+                } else {
+                    throw new Error('Failed to load contacts');
                 }
             } catch (error) {
                 console.error('Error loading contacts:', error);
+                const tbody = document.getElementById('contacts-table');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-red-500">
+                            <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
+                            <p class="text-lg">ডেটা লোড করতে সমস্যা হয়েছে</p>
+                            <p class="text-sm mt-2">দয়া করে রিফ্রেশ করে আবার চেষ্টা করুন</p>
+                        </td>
+                    </tr>
+                `;
                 showToast('ডেটা লোড করতে সমস্যা হয়েছে', 'error');
             }
         }
@@ -734,68 +853,74 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
                     headers: {
-                        'Authorization': `Bearer ${currentToken}`
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json'
                     }
                 });
                 
                 if (response.ok) {
-                    const contact = await response.json();
+                    const data = await response.json();
                     
-                    const detailsDiv = document.getElementById('contact-details');
-                    const statusSelect = document.getElementById('update-status');
-                    
-                    const statusText = {
-                        new: 'নতুন',
-                        contacted: 'যোগাযোগ করা হয়েছে',
-                        in_progress: 'প্রসেসিং',
-                        completed: 'সম্পন্ন',
-                        cancelled: 'বাতিল'
-                    };
-                    
-                    detailsDiv.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-gray-600 text-sm">নাম</p>
-                                <p class="font-medium text-gray-800">${contact.name}</p>
+                    if (data.success) {
+                        const contact = data.contact;
+                        const detailsDiv = document.getElementById('contact-details');
+                        const statusSelect = document.getElementById('update-status');
+                        
+                        const statusText = {
+                            new: 'নতুন',
+                            contacted: 'যোগাযোগ করা হয়েছে',
+                            in_progress: 'প্রসেসিং',
+                            completed: 'সম্পন্ন',
+                            cancelled: 'বাতিল'
+                        };
+                        
+                        detailsDiv.innerHTML = `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <p class="text-gray-600 text-sm">নাম</p>
+                                    <p class="font-medium text-gray-800">${contact.name || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">ইমেইল</p>
+                                    <p class="font-medium text-gray-800">${contact.email || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">ফোন</p>
+                                    <p class="font-medium text-gray-800">${contact.phone || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">প্যাকেজ</p>
+                                    <p class="font-medium text-gray-800">${contact.package || 'N/A'}</p>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="text-gray-600 text-sm">বর্তমান স্ট্যাটাস</p>
+                                    <p class="font-medium text-gray-800">${statusText[contact.status] || contact.status || 'N/A'}</p>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="text-gray-600 text-sm">মেসেজ</p>
+                                    <p class="font-medium text-gray-800 bg-gray-50 p-4 rounded-lg mt-2">${contact.message || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">সাবমিশন তারিখ</p>
+                                    <p class="font-medium text-gray-800">${contact.createdAt ? new Date(contact.createdAt).toLocaleString('bn-BD') : 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">আপডেট তারিখ</p>
+                                    <p class="font-medium text-gray-800">${contact.updatedAt ? new Date(contact.updatedAt).toLocaleString('bn-BD') : 'N/A'}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-gray-600 text-sm">ইমেইল</p>
-                                <p class="font-medium text-gray-800">${contact.email}</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-600 text-sm">ফোন</p>
-                                <p class="font-medium text-gray-800">${contact.phone || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-600 text-sm">প্যাকেজ</p>
-                                <p class="font-medium text-gray-800">${contact.package || 'N/A'}</p>
-                            </div>
-                            <div class="md:col-span-2">
-                                <p class="text-gray-600 text-sm">বর্তমান স্ট্যাটাস</p>
-                                <p class="font-medium text-gray-800">${statusText[contact.status] || contact.status}</p>
-                            </div>
-                            <div class="md:col-span-2">
-                                <p class="text-gray-600 text-sm">মেসেজ</p>
-                                <p class="font-medium text-gray-800 bg-gray-50 p-4 rounded-lg mt-2">${contact.message}</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-600 text-sm">সাবমিশন তারিখ</p>
-                                <p class="font-medium text-gray-800">${new Date(contact.createdAt).toLocaleString('bn-BD')}</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-600 text-sm">আপডেট তারিখ</p>
-                                <p class="font-medium text-gray-800">${new Date(contact.updatedAt).toLocaleString('bn-BD')}</p>
-                            </div>
-                        </div>
-                    `;
-                    
-                    statusSelect.value = contact.status;
-                    
-                    // Store current contact ID for status update
-                    statusSelect.dataset.contactId = contactId;
-                    
-                    // Show modal
-                    document.getElementById('contact-modal').classList.remove('hidden');
+                        `;
+                        
+                        statusSelect.value = contact.status || 'new';
+                        
+                        // Store current contact ID for status update
+                        statusSelect.dataset.contactId = contactId;
+                        
+                        // Show modal
+                        document.getElementById('contact-modal').classList.remove('hidden');
+                    }
+                } else {
+                    throw new Error('Failed to load contact details');
                 }
             } catch (error) {
                 console.error('Error loading contact details:', error);
@@ -810,16 +935,23 @@
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${currentToken}`,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ status })
                 });
                 
                 if (response.ok) {
-                    showToast('স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে', 'success');
-                    loadContacts(currentPage, currentFilters);
-                    loadDashboardStats();
-                    loadRecentContacts();
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে', 'success');
+                        loadContacts(currentPage, currentFilters);
+                        loadDashboardStats();
+                        loadRecentContacts();
+                        loadAnalytics();
+                    }
+                } else {
+                    throw new Error('Failed to update status');
                 }
             } catch (error) {
                 console.error('Error updating contact:', error);
@@ -837,15 +969,22 @@
                 const response = await fetch(`${API_BASE_URL}/api/admin/contacts/${contactId}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${currentToken}`
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json'
                     }
                 });
                 
                 if (response.ok) {
-                    showToast('কন্টাক্ট সফলভাবে ডিলিট করা হয়েছে', 'success');
-                    loadContacts(currentPage, currentFilters);
-                    loadDashboardStats();
-                    loadRecentContacts();
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('কন্টাক্ট সফলভাবে ডিলিট করা হয়েছে', 'success');
+                        loadContacts(currentPage, currentFilters);
+                        loadDashboardStats();
+                        loadRecentContacts();
+                        loadAnalytics();
+                    }
+                } else {
+                    throw new Error('Failed to delete contact');
                 }
             } catch (error) {
                 console.error('Error deleting contact:', error);
@@ -858,105 +997,133 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
                     headers: {
-                        'Authorization': `Bearer ${currentToken}`
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json'
                     }
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // Package Distribution
-                    const packageChart = document.getElementById('package-chart');
-                    if (data.packageStats && data.packageStats.length > 0) {
-                        packageChart.innerHTML = '';
-                        data.packageStats.forEach(item => {
-                            const percentage = (item.count / data.totalContacts * 100).toFixed(1);
-                            const color = item._id === 'প্রিমিয়াম' ? 'bg-purple-600' : 
-                                         item._id === 'স্ট্যান্ডার্ড' ? 'bg-blue-600' : 
-                                         item._id === 'বেস্ট সেলার' ? 'bg-green-600' : 'bg-gray-600';
-                            
-                            const bar = document.createElement('div');
-                            bar.className = 'mb-4';
-                            bar.innerHTML = `
-                                <div class="flex justify-between mb-1">
-                                    <span class="text-gray-700">${item._id || 'N/A'}</span>
-                                    <span class="font-medium">${item.count} (${percentage}%)</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div class="h-full ${color} rounded-full" style="width: ${percentage}%"></div>
-                                </div>
-                            `;
-                            packageChart.appendChild(bar);
-                        });
-                    } else {
-                        packageChart.innerHTML = '<p class="text-gray-500">কোন ডেটা পাওয়া যায়নি</p>';
-                    }
-                    
-                    // Status Distribution
-                    const statusChart = document.getElementById('status-chart');
-                    const statusData = [
-                        { label: 'নতুন', count: data.newContacts, color: 'bg-blue-600' },
-                        { label: 'যোগাযোগ', count: data.contacted, color: 'bg-yellow-600' },
-                        { label: 'প্রসেসিং', count: data.inProgress, color: 'bg-orange-600' },
-                        { label: 'সম্পন্ন', count: data.completed, color: 'bg-green-600' },
-                        { label: 'বাতিল', count: data.cancelled || 0, color: 'bg-red-600' }
-                    ];
-                    
-                    if (data.totalContacts > 0) {
-                        statusChart.innerHTML = '';
-                        statusData.forEach(item => {
-                            const percentage = (item.count / data.totalContacts * 100).toFixed(1);
-                            
-                            const bar = document.createElement('div');
-                            bar.className = 'mb-4';
-                            bar.innerHTML = `
-                                <div class="flex justify-between mb-1">
-                                    <span class="text-gray-700">${item.label}</span>
-                                    <span class="font-medium">${item.count} (${percentage}%)</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div class="h-full ${item.color} rounded-full" style="width: ${percentage}%"></div>
-                                </div>
-                            `;
-                            statusChart.appendChild(bar);
-                        });
-                    } else {
-                        statusChart.innerHTML = '<p class="text-gray-500">কোন ডেটা পাওয়া যায়নি</p>';
+                    if (data.success) {
+                        // Package Distribution
+                        const packageChart = document.getElementById('package-chart');
+                        if (data.packageStats && data.packageStats.length > 0) {
+                            packageChart.innerHTML = '';
+                            data.packageStats.forEach(item => {
+                                const percentage = data.totalContacts > 0 ? 
+                                    ((item.count / data.totalContacts) * 100).toFixed(1) : 0;
+                                const color = item._id === 'প্রিমিয়াম' ? 'bg-purple-600' : 
+                                             item._id === 'স্ট্যান্ডার্ড' ? 'bg-blue-600' : 
+                                             item._id === 'বেস্ট সেলার' ? 'bg-green-600' : 'bg-gray-600';
+                                
+                                const bar = document.createElement('div');
+                                bar.className = 'mb-4';
+                                bar.innerHTML = `
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-gray-700">${item._id || 'N/A'}</span>
+                                        <span class="font-medium">${item.count} (${percentage}%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full ${color} rounded-full" style="width: ${percentage}%"></div>
+                                    </div>
+                                `;
+                                packageChart.appendChild(bar);
+                            });
+                        } else {
+                            packageChart.innerHTML = '<p class="text-gray-500 text-center py-8">কোন প্যাকেজ ডেটা পাওয়া যায়নি</p>';
+                        }
+                        
+                        // Status Distribution
+                        const statusChart = document.getElementById('status-chart');
+                        const statusData = [
+                            { label: 'নতুন', count: data.newContacts || 0, color: 'bg-blue-600' },
+                            { label: 'যোগাযোগ', count: data.contacted || 0, color: 'bg-yellow-600' },
+                            { label: 'প্রসেসিং', count: data.inProgress || 0, color: 'bg-orange-600' },
+                            { label: 'সম্পন্ন', count: data.completed || 0, color: 'bg-green-600' },
+                            { label: 'বাতিল', count: data.cancelled || 0, color: 'bg-red-600' }
+                        ];
+                        
+                        if (data.totalContacts > 0) {
+                            statusChart.innerHTML = '';
+                            statusData.forEach(item => {
+                                const percentage = ((item.count / data.totalContacts) * 100).toFixed(1);
+                                
+                                const bar = document.createElement('div');
+                                bar.className = 'mb-4';
+                                bar.innerHTML = `
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-gray-700">${item.label}</span>
+                                        <span class="font-medium">${item.count} (${percentage}%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full ${item.color} rounded-full" style="width: ${percentage}%"></div>
+                                    </div>
+                                `;
+                                statusChart.appendChild(bar);
+                            });
+                        } else {
+                            statusChart.innerHTML = '<p class="text-gray-500 text-center py-8">কোন স্ট্যাটাস ডেটা পাওয়া যায়নি</p>';
+                        }
                     }
                 }
             } catch (error) {
                 console.error('Error loading analytics:', error);
+                const packageChart = document.getElementById('package-chart');
+                const statusChart = document.getElementById('status-chart');
+                packageChart.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
+                statusChart.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে সমস্যা হয়েছে</p>';
             }
         }
 
         // Update Time
         function updateTime() {
             const now = new Date();
-            document.getElementById('local-time').textContent = now.toLocaleString('bn-BD');
             
-            // Update server time (assuming same timezone for demo)
-            document.getElementById('server-time').textContent = now.toLocaleString('bn-BD');
+            // Format Bangladeshi time
+            const options = { 
+                timeZone: 'Asia/Dhaka',
+                year: 'numeric', 
+                month: 'numeric', 
+                day: 'numeric',
+                hour: 'numeric', 
+                minute: 'numeric', 
+                second: 'numeric',
+                hour12: true 
+            };
+            
+            const bdTime = now.toLocaleString('bn-BD', options);
+            
+            document.getElementById('local-time').textContent = bdTime;
+            document.getElementById('server-time').textContent = bdTime;
             
             // Update every minute
             setTimeout(updateTime, 60000);
         }
 
-        // Test API Connection
+        // Test API Connection Button
         document.getElementById('test-api').addEventListener('click', async () => {
             try {
+                const button = document.getElementById('test-api');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>টেস্ট হচ্ছে...';
+                button.disabled = true;
+                
                 const response = await fetch(`${API_BASE_URL}/api/health`);
                 const data = await response.json();
                 
                 const statusElement = document.getElementById('api-status');
                 const statusText = document.getElementById('api-status-text');
                 
-                if (response.ok && data.status === 'healthy') {
+                if (response.ok && data.success) {
                     statusElement.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
                     statusText.textContent = 'API কানেক্টেড - সার্ভার সচল';
-                    showToast('API কানেকশন সফল!', 'success');
+                    statusText.className = 'text-green-600';
+                    showToast('API কানেকশন সফল! সার্ভার সচল।', 'success');
                 } else {
                     statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
-                    statusText.textContent = 'API ডিসকানেক্টেড';
+                    statusText.textContent = 'API সংযোগ সমস্যা';
+                    statusText.className = 'text-red-600';
                     showToast('API কানেকশন ব্যর্থ!', 'error');
                 }
             } catch (error) {
@@ -965,16 +1132,24 @@
                 
                 statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
                 statusText.textContent = 'API ডিসকানেক্টেড';
-                showToast('API কানেকশন ব্যর্থ!', 'error');
+                statusText.className = 'text-red-600';
+                showToast('API কানেকশন ব্যর্থ! নেটওয়ার্ক ত্রুটি।', 'error');
+            } finally {
+                const button = document.getElementById('test-api');
+                button.innerHTML = '<i class="fas fa-plug mr-2"></i>টেস্ট কানেকশন';
+                button.disabled = false;
             }
         });
 
         // Setup Event Listeners
         function setupEventListeners() {
             // Mobile menu toggle
-            document.getElementById('menu-toggle').addEventListener('click', () => {
-                document.querySelector('.sidebar').classList.toggle('active');
-            });
+            const menuToggle = document.getElementById('menu-toggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => {
+                    document.querySelector('.sidebar').classList.toggle('active');
+                });
+            }
             
             // Section navigation
             document.querySelectorAll('[data-section]').forEach(link => {
@@ -993,11 +1168,17 @@
                     
                     // Show selected section
                     const sectionId = link.dataset.section;
-                    document.getElementById(sectionId).classList.remove('hidden');
-                    link.classList.add('active-section');
+                    const sectionElement = document.getElementById(sectionId);
+                    if (sectionElement) {
+                        sectionElement.classList.remove('hidden');
+                        link.classList.add('active-section');
+                    }
                     
                     // Close mobile menu
-                    document.querySelector('.sidebar').classList.remove('active');
+                    const sidebar = document.querySelector('.sidebar');
+                    if (sidebar) {
+                        sidebar.classList.remove('active');
+                    }
                     
                     // Load section specific data
                     if (sectionId === 'contacts') {
@@ -1009,87 +1190,152 @@
             });
             
             // User dropdown menu
-            document.getElementById('user-menu').addEventListener('click', () => {
-                document.getElementById('dropdown-menu').classList.toggle('hidden');
-            });
+            const userMenu = document.getElementById('user-menu');
+            if (userMenu) {
+                userMenu.addEventListener('click', () => {
+                    document.getElementById('dropdown-menu').classList.toggle('hidden');
+                });
+            }
             
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('#user-menu')) {
-                    document.getElementById('dropdown-menu').classList.add('hidden');
+                const userMenu = document.getElementById('user-menu');
+                const dropdownMenu = document.getElementById('dropdown-menu');
+                
+                if (userMenu && dropdownMenu && !userMenu.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
                 }
             });
             
             // Contact modal
-            document.getElementById('close-modal').addEventListener('click', () => {
-                document.getElementById('contact-modal').classList.add('hidden');
-            });
+            const closeModal = document.getElementById('close-modal');
+            if (closeModal) {
+                closeModal.addEventListener('click', () => {
+                    document.getElementById('contact-modal').classList.add('hidden');
+                });
+            }
+            
+            // Close modal when clicking outside
+            const contactModal = document.getElementById('contact-modal');
+            if (contactModal) {
+                contactModal.addEventListener('click', (e) => {
+                    if (e.target === contactModal) {
+                        contactModal.classList.add('hidden');
+                    }
+                });
+            }
             
             // Save status button
-            document.getElementById('save-status').addEventListener('click', () => {
-                const statusSelect = document.getElementById('update-status');
-                const contactId = statusSelect.dataset.contactId;
-                const status = statusSelect.value;
-                
-                if (contactId) {
-                    updateContactStatus(contactId, status);
-                    document.getElementById('contact-modal').classList.add('hidden');
-                }
-            });
+            const saveStatusBtn = document.getElementById('save-status');
+            if (saveStatusBtn) {
+                saveStatusBtn.addEventListener('click', () => {
+                    const statusSelect = document.getElementById('update-status');
+                    const contactId = statusSelect.dataset.contactId;
+                    const status = statusSelect.value;
+                    
+                    if (contactId) {
+                        updateContactStatus(contactId, status);
+                        document.getElementById('contact-modal').classList.add('hidden');
+                    }
+                });
+            }
             
             // Apply filters
-            document.getElementById('apply-filters').addEventListener('click', () => {
-                const filters = {};
-                
-                const statusFilter = document.getElementById('status-filter').value;
-                if (statusFilter !== 'all') {
-                    filters.status = statusFilter;
-                }
-                
-                const packageFilter = document.getElementById('package-filter').value;
-                if (packageFilter !== 'all') {
-                    filters.package = packageFilter;
-                }
-                
-                const searchFilter = document.getElementById('search-filter').value;
-                if (searchFilter) {
-                    filters.search = searchFilter;
-                }
-                
-                currentFilters = filters;
-                currentPage = 1;
-                loadContacts(currentPage, filters);
-            });
+            const applyFiltersBtn = document.getElementById('apply-filters');
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', () => {
+                    const filters = {};
+                    
+                    const statusFilter = document.getElementById('status-filter').value;
+                    if (statusFilter && statusFilter !== 'all') {
+                        filters.status = statusFilter;
+                    }
+                    
+                    const packageFilter = document.getElementById('package-filter').value;
+                    if (packageFilter && packageFilter !== 'all') {
+                        filters.package = packageFilter;
+                    }
+                    
+                    const searchFilter = document.getElementById('search-filter').value;
+                    if (searchFilter) {
+                        filters.search = searchFilter;
+                    }
+                    
+                    currentFilters = filters;
+                    currentPage = 1;
+                    loadContacts(currentPage, filters);
+                });
+            }
+            
+            // Search filter on Enter key
+            const searchFilter = document.getElementById('search-filter');
+            if (searchFilter) {
+                searchFilter.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('apply-filters').click();
+                    }
+                });
+            }
             
             // Pagination
-            document.getElementById('prev-page').addEventListener('click', () => {
-                if (currentPage > 1) {
-                    loadContacts(currentPage - 1, currentFilters);
-                }
-            });
+            const prevPageBtn = document.getElementById('prev-page');
+            if (prevPageBtn) {
+                prevPageBtn.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        loadContacts(currentPage - 1, currentFilters);
+                    }
+                });
+            }
             
-            document.getElementById('next-page').addEventListener('click', () => {
-                loadContacts(currentPage + 1, currentFilters);
+            const nextPageBtn = document.getElementById('next-page');
+            if (nextPageBtn) {
+                nextPageBtn.addEventListener('click', () => {
+                    loadContacts(currentPage + 1, currentFilters);
+                });
+            }
+            
+            // Enter key on login form
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('login-form').dispatchEvent(new Event('submit'));
+                }
             });
         }
 
         // Auto login from localStorage
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Page loaded, checking for saved login...');
+            
+            // Initial API test
+            testAPIConnection();
+            
             const savedToken = localStorage.getItem('adminToken');
             const savedAdmin = localStorage.getItem('adminData');
             
             if (savedToken && savedAdmin) {
                 try {
+                    console.log('Found saved credentials, attempting auto-login...');
+                    
                     currentToken = savedToken;
                     currentAdmin = JSON.parse(savedAdmin);
                     
                     // Verify token is still valid
-                    fetch(`${API_BASE_URL}/api/admin/stats`, {
+                    const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
                         headers: {
-                            'Authorization': `Bearer ${currentToken}`
+                            'Authorization': `Bearer ${currentToken}`,
+                            'Accept': 'application/json'
                         }
-                    }).then(response => {
-                        if (response.ok) {
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            console.log('Auto-login successful');
+                            
+                            // Update admin data
+                            currentAdmin = data.admin;
+                            localStorage.setItem('adminData', JSON.stringify(currentAdmin));
+                            
                             // Switch to dashboard
                             document.getElementById('login-page').classList.add('hidden');
                             document.getElementById('dashboard').classList.remove('hidden');
@@ -1097,44 +1343,36 @@
                             // Initialize dashboard
                             initDashboard();
                             showToast('স্বয়ংক্রিয়ভাবে লগইন করা হয়েছে', 'success');
-                        } else {
-                            // Clear invalid token
-                            localStorage.removeItem('adminToken');
-                            localStorage.removeItem('adminData');
+                            
+                            return;
                         }
-                    }).catch(() => {
-                        // Clear invalid token
-                        localStorage.removeItem('adminToken');
-                        localStorage.removeItem('adminData');
-                    });
+                    }
+                    
+                    // If verification failed, clear invalid token
+                    console.log('Token verification failed, clearing saved credentials');
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminData');
+                    currentToken = null;
+                    currentAdmin = null;
+                    
                 } catch (error) {
                     console.error('Auto login error:', error);
                     localStorage.removeItem('adminToken');
                     localStorage.removeItem('adminData');
+                    currentToken = null;
+                    currentAdmin = null;
                 }
             }
             
-            // Test API connection on load
-            fetch(`${API_BASE_URL}/api/health`)
-                .then(response => {
-                    const statusElement = document.getElementById('api-status');
-                    const statusText = document.getElementById('api-status-text');
-                    
-                    if (response.ok) {
-                        statusElement.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
-                        statusText.textContent = 'API কানেক্টেড';
-                    } else {
-                        statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
-                        statusText.textContent = 'API ডিসকানেক্টেড';
-                    }
-                })
-                .catch(() => {
-                    const statusElement = document.getElementById('api-status');
-                    const statusText = document.getElementById('api-status-text');
-                    
-                    statusElement.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
-                    statusText.textContent = 'API ডিসকানেক্টেড';
-                });
+            // Show login page if no valid saved credentials
+            console.log('No valid saved credentials, showing login page');
+            document.getElementById('login-page').classList.remove('hidden');
+            
+            // Pre-fill email if in development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                document.getElementById('email').value = 'admin@landingpro.com';
+                document.getElementById('password').value = 'admin123';
+            }
         });
     </script>
 </body>
