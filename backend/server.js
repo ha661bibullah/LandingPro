@@ -1,234 +1,311 @@
-// server.js - আপডেটেড ভার্সন
+// server.js - ল্যান্ডিংপ্রো ব্যাকএন্ড সার্ভার
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
+// Express অ্যাপ তৈরি
 const app = express();
 
-// CORS কনফিগারেশন - সব ডোমেইন অনুমতি দিন
-app.use(cors({
-    origin: '*', // সব ডোমেইন থেকে অনুমতি
+// সিকিউরিটি মিডলওয়্যার
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://cdnjs.cloudflare.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+            fontSrc: ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+}));
+
+// CORS কনফিগারেশন
+const corsOptions = {
+    origin: ['https://ephemeral-buttercream-eb339c.netlify.app', 'https://storied-travesseiro-cc792e.netlify.app', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-}));
+};
+app.use(cors(corsOptions));
 
-// OPTIONS রিকোয়েস্ট হ্যান্ডেল
-app.options('*', cors());
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
 
-// Security middleware
-app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
-}));
-
-// JSON parsing
+// JSON পার্সিং
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB connection
+// MongoDB কানেকশন
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
-.then(() => console.log('✅ MongoDB connected'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+.then(() => console.log('✅ MongoDB কানেক্টেড'))
+.catch(err => console.error('❌ MongoDB কানেকশন ইরর:', err));
 
-// Schemas
+// মডেল ডিফাইনেশন
 const contactSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: String,
-    package: { type: String, default: '' },
-    message: { type: String, required: true },
-    status: { 
-        type: String, 
-        enum: ['new', 'contacted', 'in_progress', 'completed', 'cancelled'],
-        default: 'new' 
+    name: {
+        type: String,
+        required: true,
+        trim: true
     },
-    ipAddress: String,
-    userAgent: String,
-    referrer: String,
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-const analyticsSchema = new mongoose.Schema({
-    sessionId: { type: String, required: true },
-    page: { type: String, required: true },
+    email: {
+        type: String,
+        required: true,
+        lowercase: true,
+        trim: true
+    },
+    phone: {
+        type: String,
+        trim: true
+    },
+    package: {
+        type: String,
+        enum: ['বেস্ট সেলার', 'স্ট্যান্ডার্ড', 'প্রিমিয়াম', 'কাস্টম', ''],
+        default: ''
+    },
+    message: {
+        type: String,
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['new', 'contacted', 'in_progress', 'completed', 'cancelled'],
+        default: 'new'
+    },
     ipAddress: String,
     userAgent: String,
     deviceInfo: Object,
     locationInfo: Object,
     referrer: String,
-    duration: { type: Number, default: 0 },
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    lastActivity: { type: Date, default: Date.now }
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-const adminSchema = new mongoose.Schema({
-    email: { 
-        type: String, 
-        required: true, 
-        unique: true 
+const analyticsSchema = new mongoose.Schema({
+    sessionId: {
+        type: String,
+        required: true,
+        unique: true
     },
-    password: { type: String, required: true },
-    name: { type: String, default: 'Admin' },
-    role: { 
-        type: String, 
-        enum: ['super_admin', 'admin', 'editor'],
-        default: 'admin' 
+    page: {
+        type: String,
+        required: true
     },
-    lastLogin: Date,
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now }
+    ipAddress: String,
+    userAgent: String,
+    deviceInfo: Object,
+    locationInfo: Object,
+    referrer: String,
+    duration: {
+        type: Number,
+        default: 0
+    },
+    events: [{
+        type: String,
+        element: String,
+        details: Object,
+        timestamp: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    scrollDepth: {
+        type: Number,
+        default: 0
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    lastActivity: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 const contentSchema = new mongoose.Schema({
-    key: { type: String, required: true, unique: true },
-    page: { type: String, required: true },
-    section: { type: String, required: true },
-    content: { type: String, required: true },
-    status: { 
-        type: String, 
+    key: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    page: {
+        type: String,
+        required: true
+    },
+    section: {
+        type: String,
+        required: true
+    },
+    content: {
+        type: String,
+        required: true
+    },
+    status: {
+        type: String,
         enum: ['active', 'inactive', 'draft'],
-        default: 'active' 
+        default: 'active'
     },
     updatedBy: String,
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-// Models
+const adminSchema = new mongoose.Schema({
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    name: {
+        type: String,
+        default: 'এডমিন'
+    },
+    role: {
+        type: String,
+        enum: ['super_admin', 'admin', 'editor'],
+        default: 'admin'
+    },
+    lastLogin: Date,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// মডেল তৈরি
 const Contact = mongoose.model('Contact', contactSchema);
 const Analytics = mongoose.model('Analytics', analyticsSchema);
-const Admin = mongoose.model('Admin', adminSchema);
 const Content = mongoose.model('Content', contentSchema);
+const Admin = mongoose.model('Admin', adminSchema);
 
-// Create default admin
-async function createDefaultAdmin() {
+// এডমিন ইউজার তৈরি (যদি না থাকে)
+async function createAdminUser() {
     try {
-        const adminExists = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
-        if (!adminExists) {
+        const existingAdmin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
+        if (!existingAdmin) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
             const admin = new Admin({
                 email: process.env.ADMIN_EMAIL,
                 password: hashedPassword,
-                name: 'Super Admin',
+                name: 'সুপার এডমিন',
                 role: 'super_admin'
             });
             await admin.save();
-            console.log('✅ Default admin created');
-        } else {
-            console.log('✅ Admin already exists');
+            console.log('✅ ডিফল্ট এডমিন ইউজার তৈরি করা হয়েছে');
         }
     } catch (error) {
-        console.error('❌ Error creating admin:', error);
+        console.error('❌ এডমিন ইউজার তৈরি করতে সমস্যা:', error);
     }
 }
 
-// JWT Authentication middleware
+// JWT ভেরিফিকেশন মিডলওয়্যার
 const authenticateToken = (req, res, next) => {
-    try {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-        if (!token) {
-            console.log('❌ No token provided');
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Access token required' 
-            });
-        }
-
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-            if (err) {
-                console.log('❌ Token verification failed:', err.message);
-                return res.status(403).json({ 
-                    success: false, 
-                    error: 'Invalid token' 
-                });
-            }
-            console.log('✅ Token verified for user:', user.email);
-            req.user = user;
-            next();
-        });
-    } catch (error) {
-        console.error('❌ Auth middleware error:', error);
-        return res.status(500).json({ 
+    if (!token) {
+        return res.status(401).json({ 
             success: false, 
-            error: 'Authentication error' 
+            error: 'অ্যাক্সেস টোকেন প্রয়োজন' 
         });
     }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'অবৈধ টোকেন' 
+            });
+        }
+        req.user = user;
+        next();
+    });
 };
 
-// Get client IP
+// IP অ্যাড্রেস পাওয়ার ফাংশন
 const getClientIp = (req) => {
-    return req.headers['x-forwarded-for'] || 
-           req.connection.remoteAddress || 
-           req.socket.remoteAddress || 
-           req.ip;
+    return req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
 };
 
-// Test endpoint
+// হেলথ চেক এন্ডপয়েন্ট
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'ল্যান্ডিংপ্রো API সচল আছে',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// রুট টেস্ট
 app.get('/', (req, res) => {
     res.json({
         success: true,
-        message: 'LandingPro Backend API',
-        version: '2.0.0',
-        timestamp: new Date().toISOString(),
+        message: 'ল্যান্ডিংপ্রো ব্যাকএন্ড API',
+        version: '1.0.0',
         endpoints: {
-            public: [
-                'GET  /api/health',
-                'POST /api/contact',
-                'POST /api/analytics/track',
-                'POST /api/analytics/update',
-                'GET  /api/content',
-                'POST /api/login'
-            ],
-            admin: [
-                'GET  /api/admin/verify',
-                'GET  /api/admin/stats',
-                'GET  /api/admin/contacts',
-                'GET  /api/admin/contacts/:id',
-                'PUT  /api/admin/contacts/:id',
-                'DELETE /api/admin/contacts/:id',
-                'GET  /api/admin/content',
-                'POST /api/admin/content',
-                'PUT  /api/admin/content/:id',
-                'DELETE /api/admin/content/:id'
-            ]
+            contact: '/api/contact',
+            analytics: '/api/analytics',
+            content: '/api/content',
+            admin: '/api/admin'
         }
     });
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'API is running',
-        timestamp: new Date().toISOString(),
-        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-    });
-});
-
-// =========== PUBLIC ENDPOINTS ===========
-
-// Contact form submission
+// কন্টাক্ট ফর্ম সাবমিশন
 app.post('/api/contact', async (req, res) => {
     try {
-        console.log('📧 Contact form submission received');
-        
         const { name, email, phone, package, message } = req.body;
         
+        // ভ্যালিডেশন
         if (!name || !email || !message) {
             return res.status(400).json({
                 success: false,
-                error: 'Name, email, and message are required'
+                error: 'নাম, ইমেইল এবং মেসেজ প্রয়োজন'
+            });
+        }
+
+        // ইমেইল ভ্যালিডেশন
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                error: 'সঠিক ইমেইল ঠিকানা দিন'
             });
         }
 
@@ -245,29 +322,34 @@ app.post('/api/contact', async (req, res) => {
 
         await contact.save();
 
-        console.log(`✅ Contact saved: ${name} - ${email}`);
+        // WhatsApp API কল সিমুলেট করা (ডেমোর জন্য)
+        const whatsappMessage = {
+            to: process.env.ADMIN_PHONE || '+8801326198456',
+            message: `ল্যান্ডিংপ্রো - নতুন ক্লায়েন্ট:\n\nনাম: ${name}\nইমেইল: ${email}\nফোন: ${phone || 'N/A'}\nপ্যাকেজ: ${package || 'N/A'}`
+        };
 
         res.status(201).json({
             success: true,
-            message: 'Your message has been sent successfully',
+            message: 'আপনার মেসেজ সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।',
             data: {
                 id: contact._id,
                 name: contact.name,
                 email: contact.email,
+                package: contact.package,
                 status: contact.status
             }
         });
 
     } catch (error) {
-        console.error('❌ Contact submission error:', error);
+        console.error('কন্টাক্ট সাবমিশন ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Server error. Please try again.'
+            error: 'সার্ভার ইরর হয়েছে। দয়া করে আবার চেষ্টা করুন।'
         });
     }
 });
 
-// Analytics tracking
+// অ্যানালিটিক্স ট্র্যাকিং
 app.post('/api/analytics/track', async (req, res) => {
     try {
         const { sessionId, page, deviceInfo, location, referrer } = req.body;
@@ -284,49 +366,63 @@ app.post('/api/analytics/track', async (req, res) => {
 
         await analytics.save();
 
-        res.json({
+        res.status(200).json({
             success: true,
-            message: 'Analytics tracked'
+            message: 'অ্যানালিটিক্স ট্র্যাক করা হয়েছে'
         });
 
     } catch (error) {
-        console.error('Analytics tracking error:', error);
+        console.error('অ্যানালিটিক্স ট্র্যাকিং ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Analytics tracking failed'
+            error: 'অ্যানালিটিক্স ট্র্যাক করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Analytics update
+// অ্যানালিটিক্স আপডেট
 app.post('/api/analytics/update', async (req, res) => {
     try {
-        const { sessionId, duration } = req.body;
+        const { sessionId, duration, event } = req.body;
         
+        const updateData = {
+            lastActivity: new Date(),
+            isActive: true
+        };
+
+        if (duration) updateData.duration = duration;
+        if (event) {
+            updateData.$push = {
+                events: {
+                    type: event.type,
+                    element: event.element,
+                    details: event.details || {},
+                    timestamp: new Date()
+                }
+            };
+        }
+
         await Analytics.findOneAndUpdate(
             { sessionId },
-            { 
-                duration,
-                lastActivity: new Date(),
-                isActive: true 
-            }
+            updateData,
+            { new: true }
         );
 
-        res.json({
+        res.status(200).json({
             success: true,
-            message: 'Analytics updated'
+            message: 'অ্যানালিটিক্স আপডেট করা হয়েছে'
         });
 
     } catch (error) {
-        console.error('Analytics update error:', error);
+        console.error('অ্যানালিটিক্স আপডেট ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Analytics update failed'
+            error: 'অ্যানালিটিক্স আপডেট করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Get content
+// কন্টেন্ট গেট
 app.get('/api/content', async (req, res) => {
     try {
         const content = await Content.find({ status: 'active' });
@@ -340,82 +436,73 @@ app.get('/api/content', async (req, res) => {
             };
         });
 
-        res.json({
+        res.status(200).json({
             success: true,
             content: contentMap
         });
 
     } catch (error) {
-        console.error('Content load error:', error);
+        console.error('কন্টেন্ট লোড ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to load content'
+            error: 'কন্টেন্ট লোড করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Admin login
+// এডমিন লগইন
 app.post('/api/login', async (req, res) => {
     try {
-        console.log('🔐 Login attempt:', req.body.email);
-        
         const { email, password } = req.body;
         
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                error: 'Email and password are required'
+                error: 'ইমেইল এবং পাসওয়ার্ড প্রয়োজন'
             });
         }
 
-        const admin = await Admin.findOne({ email: email.toLowerCase().trim() });
-        
+        const admin = await Admin.findOne({ email });
         if (!admin) {
-            console.log('❌ Admin not found:', email);
             return res.status(401).json({
                 success: false,
-                error: 'Invalid email or password'
+                error: 'ইমেইল বা পাসওয়ার্ড ভুল'
             });
         }
 
         if (!admin.isActive) {
             return res.status(403).json({
                 success: false,
-                error: 'Account is deactivated'
+                error: 'এই অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে'
             });
         }
 
         const isPasswordValid = await bcrypt.compare(password, admin.password);
-        
         if (!isPasswordValid) {
-            console.log('❌ Invalid password for:', email);
             return res.status(401).json({
                 success: false,
-                error: 'Invalid email or password'
+                error: 'ইমেইল বা পাসওয়ার্ড ভুল'
             });
         }
 
-        // Generate token
+        // টোকেন জেনারেট
         const token = jwt.sign(
             { 
                 id: admin._id, 
                 email: admin.email,
-                role: admin.role,
-                name: admin.name
+                role: admin.role 
             },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // Update last login
+        // লাস্ট লগইন আপডেট
         admin.lastLogin = new Date();
         await admin.save();
 
-        console.log('✅ Login successful for:', email);
-
-        res.json({
+        res.status(200).json({
             success: true,
-            message: 'Login successful',
+            message: 'সফলভাবে লগইন হয়েছে',
             token,
             admin: {
                 id: admin._id,
@@ -427,17 +514,15 @@ app.post('/api/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Login error:', error);
+        console.error('লগইন ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Login failed. Please try again.'
+            error: 'লগইন করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// =========== PROTECTED ENDPOINTS ===========
-
-// Verify token
+// এডমিন টোকেন ভেরিফিকেশন
 app.get('/api/admin/verify', authenticateToken, async (req, res) => {
     try {
         const admin = await Admin.findById(req.user.id);
@@ -445,11 +530,11 @@ app.get('/api/admin/verify', authenticateToken, async (req, res) => {
         if (!admin || !admin.isActive) {
             return res.status(403).json({
                 success: false,
-                error: 'Account not found or inactive'
+                error: 'অ্যাকাউন্ট নিষ্ক্রিয় বা পাওয়া যায়নি'
             });
         }
 
-        res.json({
+        res.status(200).json({
             success: true,
             admin: {
                 id: admin._id,
@@ -461,24 +546,22 @@ app.get('/api/admin/verify', authenticateToken, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Token verification error:', error);
+        console.error('টোকেন ভেরিফিকেশন ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Verification failed'
+            error: 'ভেরিফিকেশন ব্যর্থ'
         });
     }
 });
 
-// Get admin stats
+// এডমিন স্ট্যাটিস্টিক্স
 app.get('/api/admin/stats', authenticateToken, async (req, res) => {
     try {
-        console.log('📊 Fetching admin stats...');
-        
-        // Total contacts
+        // মোট কন্টাক্ট
         const totalContacts = await Contact.countDocuments();
         
-        // Status counts
-        const statusCounts = await Contact.aggregate([
+        // স্ট্যাটাস অনুযায়ী কন্টাক্ট
+        const statusStats = await Contact.aggregate([
             {
                 $group: {
                     _id: '$status',
@@ -487,25 +570,25 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
             }
         ]);
 
-        // Package counts
-        const packageCounts = await Contact.aggregate([
-            {
-                $match: {
-                    package: { $ne: '' }
-                }
-            },
+        // প্যাকেজ অনুযায়ী কন্টাক্ট
+        const packageStats = await Contact.aggregate([
             {
                 $group: {
                     _id: '$package',
                     count: { $sum: 1 }
                 }
+            },
+            {
+                $match: {
+                    _id: { $ne: '' }
+                }
             }
         ]);
 
-        // Analytics stats
+        // অ্যানালিটিক্স স্ট্যাটস
         const activeVisitors = await Analytics.countDocuments({ 
             isActive: true,
-            lastActivity: { $gte: new Date(Date.now() - 15 * 60 * 1000) }
+            lastActivity: { $gte: new Date(Date.now() - 15 * 60 * 1000) } // Last 15 minutes
         });
 
         const todayVisitors = await Analytics.countDocuments({
@@ -513,41 +596,48 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
         });
 
         const totalPageviews = await Analytics.countDocuments();
-
-        // Format response
-        const stats = {
-            totalContacts,
-            newContacts: statusCounts.find(s => s._id === 'new')?.count || 0,
-            contacted: statusCounts.find(s => s._id === 'contacted')?.count || 0,
-            inProgress: statusCounts.find(s => s._id === 'in_progress')?.count || 0,
-            completed: statusCounts.find(s => s._id === 'completed')?.count || 0,
-            cancelled: statusCounts.find(s => s._id === 'cancelled')?.count || 0,
-            packageStats: packageCounts,
-            statusStats: statusCounts,
-            analytics: {
-                activeVisitors,
-                todayVisitors,
-                totalPageviews
+        
+        const avgSession = await Analytics.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    avgDuration: { $avg: '$duration' }
+                }
             }
-        };
+        ]);
 
-        console.log('✅ Stats fetched successfully');
-
-        res.json({
+        res.status(200).json({
             success: true,
-            ...stats
+            stats: {
+                totalContacts,
+                statusStats,
+                packageStats,
+                analytics: {
+                    activeVisitors,
+                    todayVisitors,
+                    totalPageviews,
+                    avgSessionDuration: avgSession[0]?.avgDuration || 0
+                }
+            },
+            counts: {
+                newContacts: statusStats.find(s => s._id === 'new')?.count || 0,
+                contacted: statusStats.find(s => s._id === 'contacted')?.count || 0,
+                inProgress: statusStats.find(s => s._id === 'in_progress')?.count || 0,
+                completed: statusStats.find(s => s._id === 'completed')?.count || 0,
+                cancelled: statusStats.find(s => s._id === 'cancelled')?.count || 0
+            }
         });
 
     } catch (error) {
-        console.error('❌ Stats fetch error:', error);
+        console.error('স্ট্যাটিস্টিক্স লোড ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch statistics'
+            error: 'স্ট্যাটিস্টিক্স লোড করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Get all contacts with pagination
+// সকল কন্টাক্ট লিস্ট
 app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
     try {
         const { 
@@ -555,10 +645,12 @@ app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
             limit = 10, 
             status, 
             package, 
-            search 
+            search,
+            sortBy = 'createdAt',
+            sortOrder = 'desc'
         } = req.query;
 
-        // Build filter
+        // ফিল্টার তৈরি
         const filter = {};
         
         if (status && status !== 'all') {
@@ -577,22 +669,22 @@ app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
             ];
         }
 
-        // Pagination
+        // পেজিনেশন
         const skip = (parseInt(page) - 1) * parseInt(limit);
+        const sort = {};
+        sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-        // Get contacts
+        // কন্টাক্ট লিস্ট
         const contacts = await Contact.find(filter)
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
             .limit(parseInt(limit))
             .select('-__v');
 
-        // Get total count
+        // টোটাল কাউন্ট
         const total = await Contact.countDocuments(filter);
 
-        console.log(`✅ Fetched ${contacts.length} contacts`);
-
-        res.json({
+        res.status(200).json({
             success: true,
             contacts,
             pagination: {
@@ -604,15 +696,15 @@ app.get('/api/admin/contacts', authenticateToken, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Contacts fetch error:', error);
+        console.error('কন্টাক্ট লিস্ট ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch contacts'
+            error: 'কন্টাক্ট লিস্ট লোড করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Get single contact
+// সিঙ্গেল কন্টাক্ট ডিটেইলস
 app.get('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
     try {
         const contact = await Contact.findById(req.params.id).select('-__v');
@@ -620,25 +712,25 @@ app.get('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
         if (!contact) {
             return res.status(404).json({
                 success: false,
-                error: 'Contact not found'
+                error: 'কন্টাক্ট পাওয়া যায়নি'
             });
         }
 
-        res.json({
+        res.status(200).json({
             success: true,
             contact
         });
 
     } catch (error) {
-        console.error('Contact details error:', error);
+        console.error('কন্টাক্ট ডিটেইলস ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch contact details'
+            error: 'কন্টাক্ট ডিটেইলস লোড করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Update contact status
+// কন্টাক্ট স্ট্যাটাস আপডেট
 app.put('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
     try {
         const { status } = req.body;
@@ -646,15 +738,15 @@ app.put('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
         if (!status) {
             return res.status(400).json({
                 success: false,
-                error: 'Status is required'
+                error: 'স্ট্যাটাস প্রয়োজন'
             });
         }
 
-        const validStatuses = ['new', 'contacted', 'in_progress', 'completed', 'cancelled'];
-        if (!validStatuses.includes(status)) {
+        const allowedStatus = ['new', 'contacted', 'in_progress', 'completed', 'cancelled'];
+        if (!allowedStatus.includes(status)) {
             return res.status(400).json({
                 success: false,
-                error: 'Invalid status'
+                error: 'অবৈধ স্ট্যাটাস'
             });
         }
 
@@ -670,26 +762,26 @@ app.put('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
         if (!contact) {
             return res.status(404).json({
                 success: false,
-                error: 'Contact not found'
+                error: 'কন্টাক্ট পাওয়া যায়নি'
             });
         }
 
-        res.json({
+        res.status(200).json({
             success: true,
-            message: 'Status updated successfully',
+            message: 'স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে',
             contact
         });
 
     } catch (error) {
-        console.error('Contact update error:', error);
+        console.error('কন্টাক্ট আপডেট ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to update contact'
+            error: 'কন্টাক্ট আপডেট করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Delete contact
+// কন্টাক্ট ডিলিট
 app.delete('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
     try {
         const contact = await Contact.findByIdAndDelete(req.params.id);
@@ -697,39 +789,39 @@ app.delete('/api/admin/contacts/:id', authenticateToken, async (req, res) => {
         if (!contact) {
             return res.status(404).json({
                 success: false,
-                error: 'Contact not found'
+                error: 'কন্টাক্ট পাওয়া যায়নি'
             });
         }
 
-        res.json({
+        res.status(200).json({
             success: true,
-            message: 'Contact deleted successfully'
+            message: 'কন্টাক্ট সফলভাবে ডিলিট করা হয়েছে'
         });
 
     } catch (error) {
-        console.error('Contact delete error:', error);
+        console.error('কন্টাক্ট ডিলিট ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to delete contact'
+            error: 'কন্টাক্ট ডিলিট করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Content management endpoints
+// কন্টেন্ট ম্যানেজমেন্ট এন্ডপয়েন্টস
 app.get('/api/admin/content', authenticateToken, async (req, res) => {
     try {
         const content = await Content.find().sort({ updatedAt: -1 });
         
-        res.json({
+        res.status(200).json({
             success: true,
             content
         });
 
     } catch (error) {
-        console.error('Content list error:', error);
+        console.error('কন্টেন্ট লিস্ট ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to load content'
+            error: 'কন্টেন্ট লিস্ট লোড করতে সমস্যা হয়েছে'
         });
     }
 });
@@ -741,23 +833,25 @@ app.post('/api/admin/content', authenticateToken, async (req, res) => {
         if (!key || !page || !section || !content) {
             return res.status(400).json({
                 success: false,
-                error: 'All fields are required'
+                error: 'সকল ফিল্ড প্রয়োজন'
             });
         }
 
-        const existing = await Content.findOne({ key });
+        const existingContent = await Content.findOne({ key });
         let savedContent;
 
-        if (existing) {
-            existing.page = page;
-            existing.section = section;
-            existing.content = content;
-            existing.status = status || 'active';
-            existing.updatedBy = req.user.email;
-            existing.updatedAt = new Date();
+        if (existingContent) {
+            // আপডেট
+            existingContent.page = page;
+            existingContent.section = section;
+            existingContent.content = content;
+            existingContent.status = status || 'active';
+            existingContent.updatedBy = req.user.email;
+            existingContent.updatedAt = new Date();
             
-            savedContent = await existing.save();
+            savedContent = await existingContent.save();
         } else {
+            // নতুন তৈরি
             const newContent = new Content({
                 key,
                 page,
@@ -770,48 +864,110 @@ app.post('/api/admin/content', authenticateToken, async (req, res) => {
             savedContent = await newContent.save();
         }
 
-        res.json({
+        res.status(200).json({
             success: true,
-            message: existing ? 'Content updated' : 'Content created',
+            message: existingContent ? 'কন্টেন্ট আপডেট করা হয়েছে' : 'কন্টেন্ট তৈরি করা হয়েছে',
             content: savedContent
         });
 
     } catch (error) {
-        console.error('Content save error:', error);
+        console.error('কন্টেন্ট সেভ ইরর:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to save content'
+            error: 'কন্টেন্ট সেভ করতে সমস্যা হয়েছে'
         });
     }
 });
 
-// Error handling middleware
+app.put('/api/admin/content/:id', authenticateToken, async (req, res) => {
+    try {
+        const { content, status } = req.body;
+        
+        const updatedContent = await Content.findByIdAndUpdate(
+            req.params.id,
+            { 
+                content,
+                status: status || 'active',
+                updatedBy: req.user.email,
+                updatedAt: new Date()
+            },
+            { new: true }
+        );
+
+        if (!updatedContent) {
+            return res.status(404).json({
+                success: false,
+                error: 'কন্টেন্ট পাওয়া যায়নি'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'কন্টেন্ট আপডেট করা হয়েছে',
+            content: updatedContent
+        });
+
+    } catch (error) {
+        console.error('কন্টেন্ট আপডেট ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'কন্টেন্ট আপডেট করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
+app.delete('/api/admin/content/:id', authenticateToken, async (req, res) => {
+    try {
+        const deletedContent = await Content.findByIdAndDelete(req.params.id);
+        
+        if (!deletedContent) {
+            return res.status(404).json({
+                success: false,
+                error: 'কন্টেন্ট পাওয়া যায়নি'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'কন্টেন্ট ডিলিট করা হয়েছে'
+        });
+
+    } catch (error) {
+        console.error('কন্টেন্ট ডিলিট ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'কন্টেন্ট ডিলিট করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
+// ইরর হ্যান্ডলিং মিডলওয়্যার
 app.use((err, req, res, next) => {
-    console.error('Server error:', err);
+    console.error('সার্ভার ইরর:', err);
+    
     res.status(err.status || 500).json({
         success: false,
         error: process.env.NODE_ENV === 'production' 
-            ? 'Server error occurred' 
+            ? 'সার্ভার ইরর হয়েছে' 
             : err.message
     });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
+// 404 হ্যান্ডলিং
+app.use((req, res) => {
     res.status(404).json({
         success: false,
-        error: 'Endpoint not found'
+        error: 'এন্ডপয়েন্ট পাওয়া যায়নি'
     });
 });
 
-// Start server
+// সার্ভার স্টার্ট
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
-    await createDefaultAdmin();
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📡 API Base URL: http://localhost:${PORT}`);
-    console.log(`🔐 Admin Credentials:`);
+    await createAdminUser();
+    console.log(`🚀 সার্ভার চলছে পোর্ট ${PORT} এ`);
+    console.log(`📡 API বেস URL: http://localhost:${PORT}`);
+    console.log(`🔐 এডমিন লগইন:`);
     console.log(`   📧 Email: ${process.env.ADMIN_EMAIL}`);
     console.log(`   🔑 Password: ${process.env.ADMIN_PASSWORD}`);
-    console.log(`🌐 CORS enabled for all origins`);
 });
