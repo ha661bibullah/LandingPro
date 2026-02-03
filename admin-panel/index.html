@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             font-family: 'Hind Siliguri', sans-serif;
@@ -64,6 +66,26 @@
             background-color: #eff6ff;
             color: #1d4ed8;
             border-left: 4px solid #3b82f6;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .real-time-badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .visitor-card {
+            transition: all 0.3s ease;
+        }
+        .visitor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -165,6 +187,10 @@
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         ড্যাশবোর্ড
                     </a>
+                    <a href="#" data-section="analytics" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        ভিজিটর মনিটরিং
+                    </a>
                     <a href="#" data-section="contacts" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
                         <i class="fas fa-users mr-3"></i>
                         কন্টাক্ট রিকোয়েস্ট
@@ -172,10 +198,6 @@
                     <a href="#" data-section="content-management" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
                         <i class="fas fa-edit mr-3"></i>
                         কন্টেন্ট ম্যানেজমেন্ট
-                    </a>
-                    <a href="#" data-section="analytics" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
-                        <i class="fas fa-chart-bar mr-3"></i>
-                        অ্যানালিটিক্স মনিটরিং
                     </a>
                     <a href="#" data-section="settings" class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition duration-200">
                         <i class="fas fa-cog mr-3"></i>
@@ -244,6 +266,23 @@
                         </div>
                     </div>
 
+                    <!-- Analytics Overview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">পেজ ভিউ ট্রেন্ড</h3>
+                            <div class="chart-container">
+                                <canvas id="pageViewsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">ডিভাইস ডিস্ট্রিবিউশন</h3>
+                            <div class="chart-container">
+                                <canvas id="deviceDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Recent Contacts -->
                     <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
@@ -268,6 +307,196 @@
                                     <!-- Data will be loaded here -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analytics Monitoring -->
+                <section id="analytics" class="content-section hidden">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">বাস্তব সময়ে ভিজিটর মনিটরিং</h2>
+                        <p class="text-gray-600">ফ্রন্টএন্ড পেজের সকল ভিজিটর এক্টিভিটি রিয়েল টাইমে ট্র্যাক করুন</p>
+                    </div>
+
+                    <!-- Real-time Stats -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">সক্রিয় ভিজিটর</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
+                                        <span id="active-visitors">0</span>
+                                        <span class="ml-2 real-time-badge">
+                                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                        </span>
+                                    </h3>
+                                    <p class="text-gray-600 text-sm mt-1">সর্বশেষ ১৫ মিনিট</p>
+                                </div>
+                                <div class="bg-green-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-users text-green-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">আজকের ভিজিটর</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="today-visitors">0</h3>
+                                    <p class="text-gray-600 text-sm mt-1">সর্বশেষ ২৪ ঘন্টা</p>
+                                </div>
+                                <div class="bg-blue-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-chart-line text-blue-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">মোট পেজ ভিউ</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="total-pageviews">0</h3>
+                                    <p class="text-gray-600 text-sm mt-1">সকল সময়</p>
+                                </div>
+                                <div class="bg-purple-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-eye text-purple-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm md:text-base">গড় সেশন সময়</p>
+                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="avg-session">0s</h3>
+                                    <p class="text-gray-600 text-sm mt-1">সর্বশেষ ৭ দিন</p>
+                                </div>
+                                <div class="bg-yellow-100 p-2 md:p-3 rounded-lg">
+                                    <i class="fas fa-clock text-yellow-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Visitors List -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6 mb-8">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+                            <h3 class="text-xl font-bold text-gray-800">সক্রিয় ভিজিটর তালিকা</h3>
+                            <button id="refresh-visitors" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm md:text-base">
+                                <i class="fas fa-sync-alt mr-2"></i>রিফ্রেশ
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সেশন আইডি</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">পেজ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ডিভাইস</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সময়</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">অ্যাকশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="active-visitors-list" class="divide-y divide-gray-200">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">পেজ ভিজিট ডিস্ট্রিবিউশন</h3>
+                            <div class="chart-container">
+                                <canvas id="pageDistributionChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">ক্লিক ইভেন্ট ডিস্ট্রিবিউশন</h3>
+                            <div class="chart-container">
+                                <canvas id="clickDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Event Analytics -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6 mb-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">ইভেন্ট অ্যানালিটিক্স</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-bold text-gray-800">বাটন ক্লিক</h4>
+                                    <span class="text-2xl font-bold text-blue-600" id="button-clicks">0</span>
+                                </div>
+                                <p class="text-gray-600 text-sm">সর্বাধিক ক্লিক: <span id="top-button">-</span></p>
+                            </div>
+                            
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-bold text-gray-800">ফর্ম সাবমিশন</h4>
+                                    <span class="text-2xl font-bold text-green-600" id="form-submissions">0</span>
+                                </div>
+                                <p class="text-gray-600 text-sm">সফল রিকোয়েস্ট: <span id="successful-forms">0</span></p>
+                            </div>
+                            
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-bold text-gray-800">সর্বাধিক স্ক্রল</h4>
+                                    <span class="text-2xl font-bold text-purple-600" id="avg-scroll-depth">0%</span>
+                                </div>
+                                <p class="text-gray-600 text-sm">গড় সেশন দৈর্ঘ্য: <span id="avg-session-length">0s</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ইভেন্ট টাইপ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">এলিমেন্ট</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সেশন</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">সময়</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-events" class="divide-y divide-gray-200">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Location Analytics -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">ভিজিটর লোকেশন</h3>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <div class="chart-container">
+                                    <canvas id="locationChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">দেশ</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">শহর</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ভিজিটর</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">গড় সময়</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="location-list" class="divide-y divide-gray-200">
+                                            <!-- Data will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -448,105 +677,6 @@
                     </div>
                 </section>
 
-                <!-- Analytics -->
-                <section id="analytics" class="content-section hidden">
-                    <div class="mb-8">
-                        <h2 class="text-2xl font-bold text-gray-800">ইউজার অ্যানালিটিক্স এবং মনিটরিং</h2>
-                        <p class="text-gray-600">বাস্তব সময়ে ভিজিটর ট্র্যাকিং এবং বিহেভিয়ার অ্যানালাইসিস</p>
-                    </div>
-
-                    <!-- Real-time Stats -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm md:text-base">সক্রিয় ভিজিটর</p>
-                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="active-visitors">0</h3>
-                                </div>
-                                <div class="bg-green-100 p-2 md:p-3 rounded-lg">
-                                    <i class="fas fa-users text-green-600 text-xl md:text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm md:text-base">আজকের ভিজিটর</p>
-                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="today-visitors">0</h3>
-                                </div>
-                                <div class="bg-blue-100 p-2 md:p-3 rounded-lg">
-                                    <i class="fas fa-chart-line text-blue-600 text-xl md:text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm md:text-base">মোট পেজ ভিউ</p>
-                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="total-pageviews">0</h3>
-                                </div>
-                                <div class="bg-purple-100 p-2 md:p-3 rounded-lg">
-                                    <i class="fas fa-eye text-purple-600 text-xl md:text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm md:text-base">গড় সেশন সময়</p>
-                                    <h3 class="text-2xl md:text-3xl font-bold text-gray-800" id="avg-session">0s</h3>
-                                </div>
-                                <div class="bg-yellow-100 p-2 md:p-3 rounded-lg">
-                                    <i class="fas fa-clock text-yellow-600 text-xl md:text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Charts -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">প্যাকেজ ডিস্ট্রিবিউশন</h3>
-                            <div id="package-chart" class="h-64 flex items-center justify-center">
-                                <p class="text-gray-500">ডেটা লোড হচ্ছে...</p>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">স্ট্যাটাস ডিস্ট্রিবিউশন</h3>
-                            <div id="status-chart" class="h-64 flex items-center justify-center">
-                                <p class="text-gray-500">ডেটা লোড হচ্ছে...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional Analytics -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">ডিভাইস ডিস্ট্রিবিউশন</h3>
-                            <div id="device-chart" class="h-64 flex items-center justify-center text-gray-500">
-                                <div class="text-center">
-                                    <i class="fas fa-mobile-alt text-3xl mb-2"></i>
-                                    <p>শীঘ্রই আসছে...</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">ইভেন্ট অ্যানালিটিক্স</h3>
-                            <div id="event-chart" class="h-64 flex items-center justify-center text-gray-500">
-                                <div class="text-center">
-                                    <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                                    <p>শীঘ্রই আসছে...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
                 <!-- Settings -->
                 <section id="settings" class="content-section hidden">
                     <div class="mb-8">
@@ -649,12 +779,14 @@
 
    <script>
     // Configuration
-    const API_BASE_URL = 'https://landingpro-call.onrender.com'; // আপনার রেন্ডার URL
+    const API_BASE_URL = 'https://landingpro-call.onrender.com';
     let currentToken = null;
     let currentAdmin = null;
     let currentPage = 1;
     let currentLimit = 10;
     let currentFilters = {};
+    let charts = {};
+    let analyticsInterval = null;
 
     // Initialize when page loads
     document.addEventListener('DOMContentLoaded', async () => {
@@ -765,10 +897,441 @@
             await loadDashboardStats();
             await loadRecentContacts();
             await loadContacts();
-            await loadAnalytics();
+            
+            // Initialize charts
+            initializeCharts();
+            
+            // Start analytics polling
+            if (analyticsInterval) {
+                clearInterval(analyticsInterval);
+            }
+            analyticsInterval = setInterval(() => {
+                if (!document.getElementById('analytics').classList.contains('hidden')) {
+                    loadAnalyticsData();
+                }
+            }, 10000); // Update every 10 seconds
+            
         } catch (error) {
             console.error('Dashboard data load error:', error);
             showToast('ডেটা লোড করতে সমস্যা', 'error');
+        }
+    }
+
+    // Initialize charts
+    function initializeCharts() {
+        // Page Views Chart
+        const pageViewsCtx = document.getElementById('pageViewsChart').getContext('2d');
+        charts.pageViews = new Chart(pageViewsCtx, {
+            type: 'line',
+            data: {
+                labels: ['০১', '০২', '০৩', '০৪', '০৫', '০৬', '০৭'],
+                datasets: [{
+                    label: 'পেজ ভিউ',
+                    data: [12, 19, 8, 15, 12, 10, 14],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Device Distribution Chart
+        const deviceCtx = document.getElementById('deviceDistributionChart').getContext('2d');
+        charts.deviceDistribution = new Chart(deviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['মোবাইল', 'ডেস্কটপ', 'ট্যাবলেট'],
+                datasets: [{
+                    data: [60, 35, 5],
+                    backgroundColor: [
+                        '#10b981',
+                        '#3b82f6',
+                        '#f59e0b'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+
+        // Initialize other charts
+        initializeAnalyticsCharts();
+    }
+
+    // Initialize analytics charts
+    function initializeAnalyticsCharts() {
+        const chartsConfig = [
+            {
+                id: 'pageDistributionChart',
+                type: 'bar',
+                labels: ['হোম', 'সার্ভিস', 'পোর্টফোলিও', 'প্যাকেজ', 'যোগাযোগ'],
+                dataset: {
+                    label: 'পেজ ভিউ',
+                    data: [45, 30, 25, 20, 15],
+                    backgroundColor: '#8b5cf6'
+                }
+            },
+            {
+                id: 'clickDistributionChart',
+                type: 'pie',
+                labels: ['বাটন', 'লিংক', 'ফর্ম', 'ইমেজ'],
+                dataset: {
+                    data: [40, 30, 20, 10],
+                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
+                }
+            },
+            {
+                id: 'locationChart',
+                type: 'polarArea',
+                labels: ['বাংলাদেশ', 'ভারত', 'মার্কিন যুক্তরাষ্ট্র', 'যুক্তরাজ্য', 'কানাডা'],
+                dataset: {
+                    data: [80, 10, 5, 3, 2],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(139, 92, 246, 0.8)'
+                    ]
+                }
+            }
+        ];
+
+        chartsConfig.forEach(config => {
+            const ctx = document.getElementById(config.id).getContext('2d');
+            const chartConfig = {
+                type: config.type,
+                data: {
+                    labels: config.labels,
+                    datasets: [config.dataset]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                        }
+                    }
+                }
+            };
+
+            charts[config.id] = new Chart(ctx, chartConfig);
+        });
+    }
+
+    // Load analytics data
+    async function loadAnalyticsData() {
+        try {
+            console.log('Loading analytics data...');
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update stats
+                document.getElementById('active-visitors').textContent = data.stats?.activeVisitors || 0;
+                document.getElementById('today-visitors').textContent = data.stats?.todayVisitors || 0;
+                document.getElementById('total-pageviews').textContent = data.stats?.totalPageviews || 0;
+                
+                const avgSession = data.stats?.avgSessionDuration || 0;
+                document.getElementById('avg-session').textContent = `${Math.round(avgSession)}s`;
+                
+                // Update event analytics
+                document.getElementById('button-clicks').textContent = data.events?.buttonClicks || 0;
+                document.getElementById('form-submissions').textContent = data.events?.formSubmissions || 0;
+                document.getElementById('avg-scroll-depth').textContent = `${data.events?.avgScrollDepth || 0}%`;
+                document.getElementById('avg-session-length').textContent = `${data.events?.avgSessionLength || 0}s`;
+                document.getElementById('top-button').textContent = data.events?.topButton || '-';
+                document.getElementById('successful-forms').textContent = data.events?.successfulForms || 0;
+                
+                // Load active visitors
+                await loadActiveVisitors();
+                
+                // Load recent events
+                await loadRecentEvents();
+                
+                // Load location data
+                await loadLocationAnalytics();
+                
+                // Update charts if they exist
+                if (charts.pageDistributionChart && data.pageDistribution) {
+                    updateChartData(charts.pageDistributionChart, data.pageDistribution);
+                }
+                
+                if (charts.clickDistributionChart && data.clickDistribution) {
+                    updateChartData(charts.clickDistributionChart, data.clickDistribution);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading analytics:', error);
+        }
+    }
+
+    // Update chart data
+    function updateChartData(chart, newData) {
+        chart.data.datasets[0].data = newData.values || chart.data.datasets[0].data;
+        if (newData.labels) {
+            chart.data.labels = newData.labels;
+        }
+        chart.update();
+    }
+
+    // Load active visitors
+    async function loadActiveVisitors() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/active`, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const tbody = document.getElementById('active-visitors-list');
+                
+                if (data.success && data.visitors && data.visitors.length > 0) {
+                    let rows = '';
+                    
+                    data.visitors.forEach(visitor => {
+                        const deviceIcon = visitor.deviceInfo?.type === 'mobile' ? 'fas fa-mobile-alt' :
+                                         visitor.deviceInfo?.type === 'tablet' ? 'fas fa-tablet-alt' : 'fas fa-desktop';
+                        
+                        const deviceColor = visitor.deviceInfo?.type === 'mobile' ? 'text-green-600' :
+                                          visitor.deviceInfo?.type === 'tablet' ? 'text-yellow-600' : 'text-blue-600';
+                        
+                        const timeAgo = getTimeAgo(visitor.lastActivity);
+                        
+                        rows += `
+                            <tr class="visitor-card">
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="font-mono text-sm">${visitor.sessionId.substring(0, 8)}...</div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="font-medium">${visitor.page}</div>
+                                    <div class="text-sm text-gray-500">${visitor.referrer || 'Direct'}</div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="${deviceIcon} ${deviceColor} mr-2"></i>
+                                        <span>${visitor.deviceInfo?.type || 'Unknown'}</span>
+                                    </div>
+                                    <div class="text-sm text-gray-500">${visitor.deviceInfo?.browser || 'Unknown'}</div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                    <div>${timeAgo}</div>
+                                    <div class="text-gray-500">${Math.floor(visitor.duration / 60)}m ${visitor.duration % 60}s</div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <button onclick="viewVisitorDetails('${visitor.sessionId}')" class="text-blue-600 hover:text-blue-900" title="বিস্তারিত">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tbody.innerHTML = rows;
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-users-slash text-3xl mb-2"></i>
+                                <p>কোন সক্রিয় ভিজিটর নেই</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading active visitors:', error);
+        }
+    }
+
+    // Load recent events
+    async function loadRecentEvents() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/events?limit=10`, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const tbody = document.getElementById('recent-events');
+                
+                if (data.success && data.events && data.events.length > 0) {
+                    let rows = '';
+                    
+                    data.events.forEach(event => {
+                        const eventIcon = event.type === 'click' ? 'fas fa-mouse-pointer text-blue-500' :
+                                        event.type === 'form_submit' ? 'fas fa-paper-plane text-green-500' :
+                                        event.type === 'scroll' ? 'fas fa-mouse text-purple-500' : 'fas fa-info-circle text-gray-500';
+                        
+                        const timeAgo = getTimeAgo(event.timestamp);
+                        
+                        rows += `
+                            <tr>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="${eventIcon} mr-2"></i>
+                                        <span>${event.type}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="font-medium">${event.element}</div>
+                                    <div class="text-sm text-gray-500 truncate max-w-xs">${event.details || ''}</div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                    ${event.sessionId.substring(0, 8)}...
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                    ${timeAgo}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tbody.innerHTML = rows;
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-3xl mb-2"></i>
+                                <p>কোন ইভেন্ট নেই</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading recent events:', error);
+        }
+    }
+
+    // Load location analytics
+    async function loadLocationAnalytics() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/locations`, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const tbody = document.getElementById('location-list');
+                
+                if (data.success && data.locations && data.locations.length > 0) {
+                    let rows = '';
+                    
+                    data.locations.forEach(location => {
+                        rows += `
+                            <tr>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-globe-asia text-blue-500 mr-2"></i>
+                                        <span>${location.country}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    ${location.city}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <span class="font-bold">${location.visitors}</span>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    ${Math.floor(location.avgDuration / 60)}m ${location.avgDuration % 60}s
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tbody.innerHTML = rows;
+                    
+                    // Update location chart
+                    if (charts.locationChart && data.chartData) {
+                        updateChartData(charts.locationChart, data.chartData);
+                    }
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-map-marker-alt text-3xl mb-2"></i>
+                                <p>কোন লোকেশন ডেটা নেই</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading location analytics:', error);
+        }
+    }
+
+    // Helper function to get time ago
+    function getTimeAgo(timestamp) {
+        const now = new Date();
+        const past = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - past) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return `${diffInSeconds} সেকেন্ড আগে`;
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} মিনিট আগে`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} ঘন্টা আগে`;
+        } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} দিন আগে`;
         }
     }
 
@@ -840,6 +1403,12 @@
         clearSavedLogin();
         showLoginPage();
         showToast('সফলভাবে লগআউট হয়েছে', 'info');
+        
+        // Clear analytics interval
+        if (analyticsInterval) {
+            clearInterval(analyticsInterval);
+            analyticsInterval = null;
+        }
     }
 
     // Load dashboard statistics
@@ -867,14 +1436,6 @@
                 document.getElementById('new-contacts').textContent = data.newContacts || 0;
                 document.getElementById('processing-contacts').textContent = data.contacted + data.inProgress || 0;
                 document.getElementById('completed-contacts').textContent = data.completed || 0;
-                
-                // Update analytics stats
-                document.getElementById('active-visitors').textContent = data.analytics?.activeVisitors || 0;
-                document.getElementById('today-visitors').textContent = data.analytics?.todayVisitors || 0;
-                document.getElementById('total-pageviews').textContent = data.analytics?.totalPageviews || 0;
-                
-                const avgSession = data.analytics?.avgSessionDuration || 0;
-                document.getElementById('avg-session').textContent = `${Math.round(avgSession)}s`;
             }
         } catch (error) {
             console.error('Error loading stats:', error);
@@ -1163,6 +1724,114 @@
         }
     }
 
+    // View visitor details
+    async function viewVisitorDetails(sessionId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/analytics/visitor/${sessionId}`, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.success) {
+                    const visitor = data.visitor;
+                    
+                    // Create modal for visitor details
+                    const modalHtml = `
+                        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                            <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                                <div class="p-6 border-b border-gray-200">
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="text-xl font-bold text-gray-800">ভিজিটর ডিটেইলস</h3>
+                                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                                            <i class="fas fa-times text-2xl"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <p class="text-gray-600 text-sm">সেশন আইডি</p>
+                                            <p class="font-mono font-medium">${visitor.sessionId}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 text-sm">পেজ</p>
+                                            <p class="font-medium">${visitor.page}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 text-sm">ডিভাইস টাইপ</p>
+                                            <p class="font-medium">${visitor.deviceInfo?.type || 'Unknown'}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 text-sm">ব্রাউজার</p>
+                                            <p class="font-medium">${visitor.deviceInfo?.browser || 'Unknown'}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 text-sm">অপারেটিং সিস্টেম</p>
+                                            <p class="font-medium">${visitor.deviceInfo?.os || 'Unknown'}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 text-sm">স্ক্রিন রেজোলিউশন</p>
+                                            <p class="font-medium">${visitor.deviceInfo?.screenResolution || 'Unknown'}</p>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <p class="text-gray-600 text-sm">দেশ</p>
+                                            <p class="font-medium">${visitor.locationInfo?.country || 'Unknown'}</p>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <p class="text-gray-600 text-sm">শহর</p>
+                                            <p class="font-medium">${visitor.locationInfo?.city || 'Unknown'}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 text-sm">রেফারার</p>
+                                            <p class="font-medium">${visitor.referrer || 'Direct'}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 text-sm">সেশন সময়</p>
+                                            <p class="font-medium">${Math.floor(visitor.duration / 60)}m ${visitor.duration % 60}s</p>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <p class="text-gray-600 text-sm">শেষ এক্টিভিটি</p>
+                                            <p class="font-medium">${new Date(visitor.lastActivity).toLocaleString('bn-BD')}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-6 pt-6 border-t border-gray-200">
+                                        <h4 class="font-bold text-gray-800 mb-4">ইভেন্ট লগ</h4>
+                                        <div class="max-h-60 overflow-y-auto">
+                                            ${visitor.events && visitor.events.length > 0 ? 
+                                                visitor.events.map(event => `
+                                                    <div class="mb-2 p-2 bg-gray-50 rounded">
+                                                        <div class="flex justify-between">
+                                                            <span class="font-medium">${event.type}</span>
+                                                            <span class="text-sm text-gray-500">${new Date(event.timestamp).toLocaleTimeString('bn-BD')}</span>
+                                                        </div>
+                                                        <div class="text-sm text-gray-600">${event.element}</div>
+                                                    </div>
+                                                `).join('') : 
+                                                '<p class="text-gray-500 text-center">কোন ইভেন্ট নেই</p>'
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                }
+            }
+        } catch (error) {
+            console.error('Error viewing visitor details:', error);
+            showToast('ভিজিটর ডিটেইলস লোড করতে সমস্যা', 'error');
+        }
+    }
+
     // Update contact status
     async function updateContactStatus(contactId, status) {
         if (!confirm('স্ট্যাটাস আপডেট করতে চান?')) return;
@@ -1218,87 +1887,6 @@
         } catch (error) {
             console.error('Error deleting contact:', error);
             showToast('ডিলিট করতে সমস্যা', 'error');
-        }
-    }
-
-    // Load analytics
-    async function loadAnalytics() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Accept': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Package distribution chart
-                    const packageChart = document.getElementById('package-chart');
-                    if (data.packageStats && data.packageStats.length > 0) {
-                        let chartHTML = '';
-                        
-                        data.packageStats.forEach(pkg => {
-                            const percentage = data.totalContacts > 0 ? 
-                                ((pkg.count / data.totalContacts) * 100).toFixed(1) : 0;
-                            
-                            const color = pkg._id === 'প্রিমিয়াম' ? 'bg-purple-600' : 
-                                         pkg._id === 'স্ট্যান্ডার্ড' ? 'bg-blue-600' : 
-                                         pkg._id === 'বেস্ট সেলার' ? 'bg-green-600' : 'bg-gray-600';
-                            
-                            chartHTML += `
-                                <div class="mb-4">
-                                    <div class="flex justify-between mb-1">
-                                        <span>${pkg._id}</span>
-                                        <span class="font-medium">${pkg.count} (${percentage}%)</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-200 rounded-full">
-                                        <div class="h-full ${color} rounded-full" style="width: ${percentage}%"></div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        
-                        packageChart.innerHTML = chartHTML;
-                    }
-                    
-                    // Status distribution chart
-                    const statusChart = document.getElementById('status-chart');
-                    const statusData = [
-                        { label: 'নতুন', value: data.newContacts || 0, color: 'bg-blue-600' },
-                        { label: 'যোগাযোগ', value: data.contacted || 0, color: 'bg-yellow-600' },
-                        { label: 'প্রসেসিং', value: data.inProgress || 0, color: 'bg-orange-600' },
-                        { label: 'সম্পন্ন', value: data.completed || 0, color: 'bg-green-600' },
-                        { label: 'বাতিল', value: data.cancelled || 0, color: 'bg-red-600' }
-                    ];
-                    
-                    if (data.totalContacts > 0) {
-                        let chartHTML = '';
-                        
-                        statusData.forEach(item => {
-                            const percentage = ((item.value / data.totalContacts) * 100).toFixed(1);
-                            
-                            chartHTML += `
-                                <div class="mb-4">
-                                    <div class="flex justify-between mb-1">
-                                        <span>${item.label}</span>
-                                        <span class="font-medium">${item.value} (${percentage}%)</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-200 rounded-full">
-                                        <div class="h-full ${item.color} rounded-full" style="width: ${percentage}%"></div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        
-                        statusChart.innerHTML = chartHTML;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error loading analytics:', error);
         }
     }
 
@@ -1481,7 +2069,10 @@
                     if (sectionId === 'contacts') {
                         loadContacts(currentPage, currentFilters);
                     } else if (sectionId === 'analytics') {
-                        loadAnalytics();
+                        loadAnalyticsData();
+                        loadActiveVisitors();
+                        loadRecentEvents();
+                        loadLocationAnalytics();
                     }
                 }
                 
@@ -1547,12 +2138,19 @@
         
         // Test API button
         document.getElementById('test-api')?.addEventListener('click', testAPIConnection);
+        
+        // Refresh visitors button
+        document.getElementById('refresh-visitors')?.addEventListener('click', () => {
+            loadActiveVisitors();
+            showToast('ভিজিটর লিস্ট রিফ্রেশ করা হয়েছে', 'success');
+        });
     }
 
     // Make functions available globally
     window.viewContact = viewContact;
     window.updateContactStatus = updateContactStatus;
     window.deleteContact = deleteContact;
+    window.viewVisitorDetails = viewVisitorDetails;
 </script>
 </body>
 </html>

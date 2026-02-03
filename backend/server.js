@@ -27,7 +27,7 @@ app.use(helmet({
 
 // CORS কনফিগারেশন
 const corsOptions = {
-    origin: ['http://landingpro.online', 'https://admin.landingpro.online', 'http://localhost:3000'],
+    origin: ['http://landingpro.online', 'https://admin.landingpro.online', 'http://localhost:3000', 'http://localhost:5000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
@@ -322,12 +322,6 @@ app.post('/api/contact', async (req, res) => {
 
         await contact.save();
 
-        // WhatsApp API কল সিমুলেট করা (ডেমোর জন্য)
-        const whatsappMessage = {
-            to: process.env.ADMIN_PHONE || '+8801326198456',
-            message: `ল্যান্ডিংপ্রো - নতুন ক্লায়েন্ট:\n\nনাম: ${name}\nইমেইল: ${email}\nফোন: ${phone || 'N/A'}\nপ্যাকেজ: ${package || 'N/A'}`
-        };
-
         res.status(201).json({
             success: true,
             message: 'আপনার মেসেজ সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।',
@@ -354,15 +348,26 @@ app.post('/api/analytics/track', async (req, res) => {
     try {
         const { sessionId, page, deviceInfo, location, referrer } = req.body;
         
-        const analytics = new Analytics({
-            sessionId,
-            page: page || 'home',
-            ipAddress: getClientIp(req),
-            userAgent: req.headers['user-agent'],
-            deviceInfo: deviceInfo || {},
-            locationInfo: location || {},
-            referrer: referrer || 'direct'
-        });
+        // Check if session already exists
+        let analytics = await Analytics.findOne({ sessionId });
+        
+        if (!analytics) {
+            analytics = new Analytics({
+                sessionId,
+                page: page || 'home',
+                ipAddress: getClientIp(req),
+                userAgent: req.headers['user-agent'],
+                deviceInfo: deviceInfo || {},
+                locationInfo: location || {},
+                referrer: referrer || 'direct',
+                isActive: true,
+                lastActivity: new Date()
+            });
+        } else {
+            analytics.page = page || analytics.page;
+            analytics.lastActivity = new Date();
+            analytics.isActive = true;
+        }
 
         await analytics.save();
 
@@ -380,33 +385,81 @@ app.post('/api/analytics/track', async (req, res) => {
     }
 });
 
+// অ্যানালিটিক্স ইভেন্ট ট্র্যাকিং
+app.post('/api/analytics/event', async (req, res) => {
+    try {
+        const { sessionId, event } = req.body;
+        
+        if (!sessionId || !event) {
+            return res.status(400).json({
+                success: false,
+                error: 'সেশন আইডি এবং ইভেন্ট প্রয়োজন'
+            });
+        }
+
+        const analytics = await Analytics.findOneAndUpdate(
+            { sessionId },
+            {
+                $push: {
+                    events: {
+                        type: event.type,
+                        element: event.element,
+                        details: event.details || {},
+                        timestamp: event.timestamp ? new Date(event.timestamp) : new Date()
+                    }
+                },
+                lastActivity: new Date(),
+                isActive: true
+            },
+            { new: true, upsert: false }
+        );
+
+        if (!analytics) {
+            return res.status(404).json({
+                success: false,
+                error: 'সেশন পাওয়া যায়নি'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'ইভেন্ট ট্র্যাক করা হয়েছে'
+        });
+
+    } catch (error) {
+        console.error('ইভেন্ট ট্র্যাকিং ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'ইভেন্ট ট্র্যাক করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
 // অ্যানালিটিক্স আপডেট
 app.post('/api/analytics/update', async (req, res) => {
     try {
-        const { sessionId, duration, event } = req.body;
+        const { sessionId, duration, scrollDepth, isActive } = req.body;
         
         const updateData = {
-            lastActivity: new Date(),
-            isActive: true
+            lastActivity: new Date()
         };
 
-        if (duration) updateData.duration = duration;
-        if (event) {
-            updateData.$push = {
-                events: {
-                    type: event.type,
-                    element: event.element,
-                    details: event.details || {},
-                    timestamp: new Date()
-                }
-            };
-        }
+        if (duration !== undefined) updateData.duration = duration;
+        if (scrollDepth !== undefined) updateData.scrollDepth = scrollDepth;
+        if (isActive !== undefined) updateData.isActive = isActive;
 
-        await Analytics.findOneAndUpdate(
+        const analytics = await Analytics.findOneAndUpdate(
             { sessionId },
             updateData,
             { new: true }
         );
+
+        if (!analytics) {
+            return res.status(404).json({
+                success: false,
+                error: 'সেশন পাওয়া যায়নি'
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -418,34 +471,6 @@ app.post('/api/analytics/update', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'অ্যানালিটিক্স আপডেট করতে সমস্যা হয়েছে'
-        });
-    }
-});
-
-// কন্টেন্ট গেট
-app.get('/api/content', async (req, res) => {
-    try {
-        const content = await Content.find({ status: 'active' });
-        
-        const contentMap = {};
-        content.forEach(item => {
-            contentMap[item.key] = {
-                content: item.content,
-                page: item.page,
-                section: item.section
-            };
-        });
-
-        res.status(200).json({
-            success: true,
-            content: contentMap
-        });
-
-    } catch (error) {
-        console.error('কন্টেন্ট লোড ইরর:', error);
-        res.status(500).json({
-            success: false,
-            error: 'কন্টেন্ট লোড করতে সমস্যা হয়েছে'
         });
     }
 });
@@ -633,6 +658,261 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'স্ট্যাটিস্টিক্স লোড করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
+// অ্যানালিটিক্স ডেটা
+app.get('/api/admin/analytics', authenticateToken, async (req, res) => {
+    try {
+        // Basic stats
+        const activeVisitors = await Analytics.countDocuments({ 
+            isActive: true,
+            lastActivity: { $gte: new Date(Date.now() - 15 * 60 * 1000) }
+        });
+
+        const todayVisitors = await Analytics.countDocuments({
+            createdAt: { $gte: new Date().setHours(0, 0, 0, 0) }
+        });
+
+        const totalPageviews = await Analytics.countDocuments();
+        
+        const avgSession = await Analytics.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    avgDuration: { $avg: '$duration' }
+                }
+            }
+        ]);
+
+        // Page distribution
+        const pageDistribution = await Analytics.aggregate([
+            {
+                $group: {
+                    _id: '$page',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 5
+            }
+        ]);
+
+        // Event analytics
+        const allAnalytics = await Analytics.find({}).limit(100);
+        let buttonClicks = 0;
+        let formSubmissions = 0;
+        let successfulForms = 0;
+        let totalScrollDepth = 0;
+        let totalSessions = 0;
+        const buttonCounts = {};
+
+        allAnalytics.forEach(analytics => {
+            if (analytics.events) {
+                analytics.events.forEach(event => {
+                    if (event.type === 'click' && event.element.startsWith('button:')) {
+                        buttonClicks++;
+                        const buttonName = event.element.replace('button:', '');
+                        buttonCounts[buttonName] = (buttonCounts[buttonName] || 0) + 1;
+                    }
+                    if (event.type === 'form_submit') {
+                        formSubmissions++;
+                    }
+                    if (event.type === 'form_submit_success') {
+                        successfulForms++;
+                    }
+                });
+            }
+            totalScrollDepth += analytics.scrollDepth || 0;
+            totalSessions++;
+        });
+
+        const topButton = Object.entries(buttonCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([button, count]) => ({ button, count }))[0];
+
+        res.status(200).json({
+            success: true,
+            stats: {
+                activeVisitors,
+                todayVisitors,
+                totalPageviews,
+                avgSessionDuration: avgSession[0]?.avgDuration || 0
+            },
+            pageDistribution: {
+                labels: pageDistribution.map(p => p._id),
+                values: pageDistribution.map(p => p.count)
+            },
+            events: {
+                buttonClicks,
+                formSubmissions,
+                successfulForms,
+                avgScrollDepth: totalSessions > 0 ? Math.round(totalScrollDepth / totalSessions) : 0,
+                avgSessionLength: avgSession[0]?.avgDuration || 0,
+                topButton: topButton ? topButton.button : '-'
+            }
+        });
+
+    } catch (error) {
+        console.error('অ্যানালিটিক্স ডেটা লোড ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'অ্যানালিটিক্স ডেটা লোড করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
+// সক্রিয় ভিজিটর লিস্ট
+app.get('/api/admin/analytics/active', authenticateToken, async (req, res) => {
+    try {
+        const visitors = await Analytics.find({ 
+            isActive: true,
+            lastActivity: { $gte: new Date(Date.now() - 15 * 60 * 1000) }
+        })
+        .sort({ lastActivity: -1 })
+        .limit(20)
+        .select('-events -__v');
+
+        res.status(200).json({
+            success: true,
+            visitors
+        });
+
+    } catch (error) {
+        console.error('সক্রিয় ভিজিটর লোড ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'সক্রিয় ভিজিটর লোড করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
+// ইভেন্ট লিস্ট
+app.get('/api/admin/analytics/events', authenticateToken, async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        
+        const analytics = await Analytics.find({
+            events: { $exists: true, $not: { $size: 0 } }
+        })
+        .sort({ lastActivity: -1 })
+        .limit(10);
+
+        let events = [];
+        analytics.forEach(a => {
+            if (a.events && a.events.length > 0) {
+                const sessionEvents = a.events.map(event => ({
+                    ...event.toObject(),
+                    sessionId: a.sessionId,
+                    timestamp: event.timestamp || a.lastActivity
+                }));
+                events = events.concat(sessionEvents);
+            }
+        });
+
+        // Sort by timestamp and limit
+        events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        events = events.slice(0, limit);
+
+        res.status(200).json({
+            success: true,
+            events
+        });
+
+    } catch (error) {
+        console.error('ইভেন্ট লিস্ট লোড ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'ইভেন্ট লিস্ট লোড করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
+// ভিজিটর ডিটেইলস
+app.get('/api/admin/analytics/visitor/:sessionId', authenticateToken, async (req, res) => {
+    try {
+        const visitor = await Analytics.findOne({ sessionId: req.params.sessionId })
+            .select('-__v');
+
+        if (!visitor) {
+            return res.status(404).json({
+                success: false,
+                error: 'ভিজিটর পাওয়া যায়নি'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            visitor
+        });
+
+    } catch (error) {
+        console.error('ভিজিটর ডিটেইলস লোড ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'ভিজিটর ডিটেইলস লোড করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
+// লোকেশন ডেটা
+app.get('/api/admin/analytics/locations', authenticateToken, async (req, res) => {
+    try {
+        const locations = await Analytics.aggregate([
+            {
+                $match: {
+                    locationInfo: { $exists: true },
+                    'locationInfo.country': { $ne: null }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        country: '$locationInfo.country',
+                        city: '$locationInfo.city'
+                    },
+                    visitors: { $sum: 1 },
+                    avgDuration: { $avg: '$duration' }
+                }
+            },
+            {
+                $sort: { visitors: -1 }
+            },
+            {
+                $limit: 10
+            },
+            {
+                $project: {
+                    country: '$_id.country',
+                    city: '$_id.city',
+                    visitors: 1,
+                    avgDuration: 1,
+                    _id: 0
+                }
+            }
+        ]);
+
+        // For chart data
+        const chartData = {
+            labels: locations.map(l => l.country),
+            values: locations.map(l => l.visitors)
+        };
+
+        res.status(200).json({
+            success: true,
+            locations,
+            chartData
+        });
+
+    } catch (error) {
+        console.error('লোকেশন ডেটা লোড ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'লোকেশন ডেটা লোড করতে সমস্যা হয়েছে'
         });
     }
 });
@@ -941,6 +1221,34 @@ app.delete('/api/admin/content/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// কন্টেন্ট গেট (পাবলিক)
+app.get('/api/content', async (req, res) => {
+    try {
+        const content = await Content.find({ status: 'active' });
+        
+        const contentMap = {};
+        content.forEach(item => {
+            contentMap[item.key] = {
+                content: item.content,
+                page: item.page,
+                section: item.section
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            content: contentMap
+        });
+
+    } catch (error) {
+        console.error('কন্টেন্ট লোড ইরর:', error);
+        res.status(500).json({
+            success: false,
+            error: 'কন্টেন্ট লোড করতে সমস্যা হয়েছে'
+        });
+    }
+});
+
 // ইরর হ্যান্ডলিং মিডলওয়্যার
 app.use((err, req, res, next) => {
     console.error('সার্ভার ইরর:', err);
@@ -970,4 +1278,7 @@ app.listen(PORT, async () => {
     console.log(`🔐 এডমিন লগইন:`);
     console.log(`   📧 Email: ${process.env.ADMIN_EMAIL}`);
     console.log(`   🔑 Password: ${process.env.ADMIN_PASSWORD}`);
+    console.log(`📊 ভিজিটর মনিটরিং: সক্রিয়`);
+    console.log(`🔗 ফ্রন্টএন্ড URL: http://localhost:3000`);
+    console.log(`🔗 এডমিন প্যানেল: http://localhost:3000/admin-panel/index.html`);
 });

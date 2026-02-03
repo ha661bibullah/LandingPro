@@ -24,9 +24,323 @@
             transform: translateY(-10px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
+        .notification {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Analytics Tracking System -->
+    <script>
+        class VisitorTracker {
+            constructor() {
+                this.sessionId = this.generateSessionId();
+                this.apiBaseUrl = 'https://landingpro-call.onrender.com';
+                this.currentPage = this.getCurrentPage();
+                this.startTime = Date.now();
+                this.lastActivity = Date.now();
+                this.scrollDepth = 0;
+                this.maxScrollDepth = 0;
+                this.events = [];
+                this.isActive = true;
+                this.pageViewSent = false;
+                
+                this.init();
+            }
+
+            generateSessionId() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            getCurrentPage() {
+                const path = window.location.pathname;
+                const hash = window.location.hash;
+                
+                if (hash) {
+                    if (hash.includes('contact')) return 'contact';
+                    if (hash.includes('portfolio')) return 'portfolio';
+                    if (hash.includes('services')) return 'services';
+                    if (hash.includes('pricing')) return 'pricing';
+                }
+                
+                return 'home';
+            }
+
+            getDeviceInfo() {
+                const userAgent = navigator.userAgent;
+                let deviceType = 'desktop';
+                let browser = 'unknown';
+                let os = 'unknown';
+
+                // Detect device type
+                if (/mobile|android|iphone|ipad|ipod/i.test(userAgent)) {
+                    deviceType = 'mobile';
+                } else if (/tablet|ipad/i.test(userAgent)) {
+                    deviceType = 'tablet';
+                }
+
+                // Detect browser
+                if (/chrome/i.test(userAgent) && !/edge/i.test(userAgent)) {
+                    browser = 'chrome';
+                } else if (/firefox/i.test(userAgent)) {
+                    browser = 'firefox';
+                } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
+                    browser = 'safari';
+                } else if (/edge/i.test(userAgent)) {
+                    browser = 'edge';
+                }
+
+                // Detect OS
+                if (/windows/i.test(userAgent)) {
+                    os = 'windows';
+                } else if (/mac/i.test(userAgent)) {
+                    os = 'mac';
+                } else if (/linux/i.test(userAgent)) {
+                    os = 'linux';
+                } else if (/android/i.test(userAgent)) {
+                    os = 'android';
+                } else if (/iphone|ipad|ipod/i.test(userAgent)) {
+                    os = 'ios';
+                }
+
+                return {
+                    type: deviceType,
+                    browser: browser,
+                    os: os,
+                    screenResolution: `${window.screen.width}x${window.screen.height}`
+                };
+            }
+
+            async getLocationInfo() {
+                try {
+                    // Using free IP API
+                    const response = await fetch('https://ipapi.co/json/');
+                    const data = await response.json();
+                    return {
+                        country: data.country_name || 'Unknown',
+                        city: data.city || 'Unknown',
+                        timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+                    };
+                } catch (error) {
+                    return {
+                        country: 'Unknown',
+                        city: 'Unknown',
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    };
+                }
+            }
+
+            async trackPageView() {
+                if (this.pageViewSent) return;
+
+                try {
+                    const deviceInfo = this.getDeviceInfo();
+                    const location = await this.getLocationInfo();
+                    
+                    const response = await fetch(`${this.apiBaseUrl}/api/analytics/track`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sessionId: this.sessionId,
+                            page: this.currentPage,
+                            userAgent: navigator.userAgent,
+                            deviceInfo: deviceInfo,
+                            location: location,
+                            referrer: document.referrer || 'direct'
+                        })
+                    });
+
+                    if (response.ok) {
+                        this.pageViewSent = true;
+                        console.log('📊 Page view tracked successfully');
+                    }
+                } catch (error) {
+                    console.error('Analytics tracking error:', error);
+                }
+            }
+
+            async trackEvent(type, element, details = {}) {
+                const event = {
+                    type: type,
+                    element: element,
+                    details: details,
+                    timestamp: new Date().toISOString(),
+                    page: this.currentPage
+                };
+
+                this.events.push(event);
+
+                try {
+                    await fetch(`${this.apiBaseUrl}/api/analytics/event`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sessionId: this.sessionId,
+                            event: event
+                        })
+                    });
+                } catch (error) {
+                    console.error('Event tracking error:', error);
+                }
+            }
+
+            async updateSession() {
+                const currentTime = Date.now();
+                const duration = Math.floor((currentTime - this.startTime) / 1000);
+                
+                try {
+                    await fetch(`${this.apiBaseUrl}/api/analytics/update`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sessionId: this.sessionId,
+                            duration: duration,
+                            scrollDepth: this.maxScrollDepth,
+                            isActive: this.isActive
+                        })
+                    });
+                } catch (error) {
+                    console.error('Session update error:', error);
+                }
+            }
+
+            setupScrollTracking() {
+                window.addEventListener('scroll', () => {
+                    const scrollTop = window.pageYOffset;
+                    const scrollHeight = document.documentElement.scrollHeight;
+                    const clientHeight = document.documentElement.clientHeight;
+                    
+                    if (scrollHeight > clientHeight) {
+                        const currentScrollDepth = Math.floor((scrollTop / (scrollHeight - clientHeight)) * 100);
+                        
+                        if (currentScrollDepth > this.maxScrollDepth) {
+                            this.maxScrollDepth = currentScrollDepth;
+                            
+                            // Track major scroll milestones
+                            if ([25, 50, 75, 90, 100].includes(currentScrollDepth)) {
+                                this.trackEvent('scroll', 'page', { depth: currentScrollDepth });
+                            }
+                        }
+                    }
+                }, { passive: true });
+            }
+
+            setupClickTracking() {
+                document.addEventListener('click', (e) => {
+                    const target = e.target;
+                    
+                    // Track button clicks
+                    if (target.tagName === 'BUTTON' || target.closest('button')) {
+                        const button = target.tagName === 'BUTTON' ? target : target.closest('button');
+                        const buttonText = button.textContent.trim().substring(0, 50);
+                        const buttonId = button.id || 'unnamed_button';
+                        
+                        this.trackEvent('click', `button:${buttonId}`, {
+                            text: buttonText,
+                            page: this.currentPage
+                        });
+                    }
+                    
+                    // Track link clicks
+                    if (target.tagName === 'A') {
+                        const linkText = target.textContent.trim().substring(0, 50);
+                        const linkHref = target.href;
+                        
+                        this.trackEvent('click', `link:${linkText}`, {
+                            href: linkHref,
+                            page: this.currentPage
+                        });
+                    }
+                    
+                    // Track form interactions
+                    if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA') {
+                        const fieldType = target.type || target.tagName.toLowerCase();
+                        const fieldName = target.name || target.id || 'unnamed_field';
+                        
+                        this.trackEvent('form_interaction', `${fieldType}:${fieldName}`, {
+                            value: target.value ? target.value.substring(0, 100) : '',
+                            page: this.currentPage
+                        });
+                    }
+                }, { passive: true });
+            }
+
+            setupFormTracking() {
+                const forms = document.querySelectorAll('form');
+                forms.forEach(form => {
+                    form.addEventListener('submit', (e) => {
+                        const formId = form.id || 'contact_form';
+                        const formData = new FormData(form);
+                        const formValues = {};
+                        
+                        for (let [key, value] of formData.entries()) {
+                            formValues[key] = value;
+                        }
+                        
+                        this.trackEvent('form_submit', formId, {
+                            fields: Object.keys(formValues).length,
+                            page: this.currentPage
+                        });
+                    });
+                });
+            }
+
+            setupVisibilityTracking() {
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        this.isActive = false;
+                        this.updateSession();
+                    } else {
+                        this.isActive = true;
+                        this.lastActivity = Date.now();
+                    }
+                });
+            }
+
+            setupTimeTracking() {
+                // Update session every 30 seconds
+                setInterval(() => {
+                    this.updateSession();
+                }, 30000);
+
+                // Send final data when page is about to unload
+                window.addEventListener('beforeunload', () => {
+                    this.isActive = false;
+                    this.updateSession();
+                });
+            }
+
+            async init() {
+                // Initial page view tracking
+                await this.trackPageView();
+                
+                // Setup all tracking
+                this.setupScrollTracking();
+                this.setupClickTracking();
+                this.setupFormTracking();
+                this.setupVisibilityTracking();
+                this.setupTimeTracking();
+                
+                console.log('📊 Visitor tracking initialized for session:', this.sessionId);
+            }
+        }
+
+        // Initialize tracking when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.visitorTracker = new VisitorTracker();
+        });
+    </script>
+
     <!-- নেভিগেশন বার -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -853,10 +1167,17 @@
             
             // নোটিফিকেশন
             showNotification(`"${packageName}" প্যাকেজ নির্বাচন করা হয়েছে। এখন ফর্ম পূরণ করুন।`);
+            
+            // Track package selection
+            if (window.visitorTracker) {
+                window.visitorTracker.trackEvent('package_select', packageName, {
+                    page: 'pricing'
+                });
+            }
         }
         
         // ফর্ম সাবমিশন
-        function submitForm(event) {
+        async function submitForm(event) {
             event.preventDefault();
             
             const name = document.getElementById('name').value;
@@ -871,30 +1192,50 @@
                 return;
             }
             
-            // WhatsApp মেসেজ তৈরি করুন
-            const whatsappMessage = `ল্যান্ডিংপ্রো - নতুন ক্লায়েন্টের ইনকোয়ারি:\n\nনাম: ${name}\nইমেইল: ${email}\nফোন: ${phone}\nপ্যাকেজ: ${package}\n\nমেসেজ: ${message}`;
-            
-            // WhatsApp এ রিডাইরেক্ট করুন
-            const whatsappUrl = `https://wa.me/8801326198456?text=${encodeURIComponent(whatsappMessage)}`;
-            window.open(whatsappUrl, '_blank');
-            
-            // সিমুলেট করা রেস্পন্স
-            setTimeout(() => {
-                showNotification(`ধন্যবাদ ${name}! আপনার রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই ${email} এ যোগাযোগ করব।`);
-                
-                // ফর্ম রিসেট
-                document.getElementById('contact-form').reset();
-                
-                // ডেমো ডেটা কনসোলে দেখান
-                console.log('ফর্ম সাবমিশন ডেটা:', {
-                    name,
-                    email,
-                    phone,
-                    package,
-                    message,
-                    timestamp: new Date().toISOString()
+            try {
+                // Send to backend API
+                const response = await fetch('https://landingpro-call.onrender.com/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        package: package,
+                        message: message
+                    })
                 });
-            }, 1000);
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`ধন্যবাদ ${name}! আপনার রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই ${email} এ যোগাযোগ করব।`);
+                    
+                    // ফর্ম রিসেট
+                    document.getElementById('contact-form').reset();
+                    
+                    // Track successful form submission
+                    if (window.visitorTracker) {
+                        window.visitorTracker.trackEvent('form_submit_success', 'contact_form', {
+                            name: name,
+                            email: email,
+                            package: package
+                        });
+                    }
+                } else {
+                    showNotification(data.error || 'ফর্ম সাবমিশন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।', 'error');
+                }
+            } catch (error) {
+                console.error('Form submission error:', error);
+                showNotification('নেটওয়ার্ক সমস্যা। দয়া করে আবার চেষ্টা করুন।', 'error');
+                
+                // Fallback to WhatsApp if API fails
+                const whatsappMessage = `ল্যান্ডিংপ্রো - নতুন ক্লায়েন্টের ইনকোয়ারি:\n\nনাম: ${name}\nইমেইল: ${email}\nফোন: ${phone}\nপ্যাকেজ: ${package}\n\nমেসেজ: ${message}`;
+                const whatsappUrl = `https://wa.me/8801326198456?text=${encodeURIComponent(whatsappMessage)}`;
+                window.open(whatsappUrl, '_blank');
+            }
         }
         
         // নোটিফিকেশন ফাংশন
@@ -921,10 +1262,24 @@
         // স্ক্রল ফাংশন
         function scrollToContact() {
             document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+            
+            // Track contact button click
+            if (window.visitorTracker) {
+                window.visitorTracker.trackEvent('click', 'contact_button', {
+                    page: window.visitorTracker.currentPage
+                });
+            }
         }
         
         function scrollToPortfolio() {
             document.getElementById('portfolio').scrollIntoView({ behavior: 'smooth' });
+            
+            // Track portfolio button click
+            if (window.visitorTracker) {
+                window.visitorTracker.trackEvent('click', 'portfolio_button', {
+                    page: window.visitorTracker.currentPage
+                });
+            }
         }
         
         // মসৃণ স্ক্রলিং
@@ -941,6 +1296,13 @@
                         top: targetElement.offsetTop - 80,
                         behavior: 'smooth'
                     });
+                    
+                    // Track navigation click
+                    if (window.visitorTracker) {
+                        window.visitorTracker.trackEvent('click', `nav_${targetId.substring(1)}`, {
+                            page: window.visitorTracker.currentPage
+                        });
+                    }
                     
                     // মোবাইল মেনু বন্ধ করুন
                     const mobileMenu = document.getElementById('mobile-menu');
@@ -964,603 +1326,5 @@
             }
         });
     </script>
-
-
-<!-- frontend/index.html এর শেষে script ট্যাগের মধ্যে এই কোড যোগ করুন -->
-<script>
-    // Analytics Tracking System
-    class AnalyticsTracker {
-        constructor() {
-            this.sessionId = this.generateSessionId();
-            this.apiBaseUrl = 'https://landingpro-call.onrender.com';
-            this.currentPage = this.getCurrentPage();
-            this.startTime = Date.now();
-            this.lastActivity = Date.now();
-            this.scrollDepth = 0;
-            this.pageViewSent = false;
-            
-            this.init();
-        }
-
-        generateSessionId() {
-            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        }
-
-        getCurrentPage() {
-            const path = window.location.pathname;
-            if (path.includes('contact')) return 'contact';
-            if (path.includes('portfolio')) return 'portfolio';
-            if (path.includes('services')) return 'services';
-            if (path.includes('pricing')) return 'pricing';
-            return 'home';
-        }
-
-        getDeviceInfo() {
-            const userAgent = navigator.userAgent;
-            let deviceType = 'desktop';
-            let browser = 'unknown';
-            let os = 'unknown';
-
-            // Detect device type
-            if (/mobile|android|iphone|ipad|ipod/i.test(userAgent)) {
-                deviceType = 'mobile';
-            } else if (/tablet|ipad/i.test(userAgent)) {
-                deviceType = 'tablet';
-            }
-
-            // Detect browser
-            if (/chrome/i.test(userAgent) && !/edge/i.test(userAgent)) {
-                browser = 'chrome';
-            } else if (/firefox/i.test(userAgent)) {
-                browser = 'firefox';
-            } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
-                browser = 'safari';
-            } else if (/edge/i.test(userAgent)) {
-                browser = 'edge';
-            }
-
-            // Detect OS
-            if (/windows/i.test(userAgent)) {
-                os = 'windows';
-            } else if (/mac/i.test(userAgent)) {
-                os = 'mac';
-            } else if (/linux/i.test(userAgent)) {
-                os = 'linux';
-            } else if (/android/i.test(userAgent)) {
-                os = 'android';
-            } else if (/iphone|ipad|ipod/i.test(userAgent)) {
-                os = 'ios';
-            }
-
-            return {
-                type: deviceType,
-                browser: browser,
-                os: os,
-                screenResolution: `${window.screen.width}x${window.screen.height}`
-            };
-        }
-
-        async getLocationInfo() {
-            try {
-                // Using free IP API
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-                return {
-                    country: data.country_name,
-                    city: data.city,
-                    timezone: data.timezone
-                };
-            } catch (error) {
-                return {
-                    country: 'Unknown',
-                    city: 'Unknown',
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                };
-            }
-        }
-
-        async trackPageView() {
-            if (this.pageViewSent) return;
-
-            try {
-                const deviceInfo = this.getDeviceInfo();
-                const location = await this.getLocationInfo();
-                
-                const response = await fetch(`${this.apiBaseUrl}/api/analytics/track`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        sessionId: this.sessionId,
-                        page: this.currentPage,
-                        ipAddress: '', // Backend will get this
-                        userAgent: navigator.userAgent,
-                        deviceInfo,
-                        location,
-                        referrer: document.referrer || 'direct'
-                    })
-                });
-
-                if (response.ok) {
-                    this.pageViewSent = true;
-                    console.log('📊 Page view tracked');
-                }
-            } catch (error) {
-                console.error('Analytics tracking error:', error);
-            }
-        }
-
-        async trackEvent(type, element, details = {}) {
-            try {
-                await fetch(`${this.apiBaseUrl}/api/analytics/update`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        sessionId: this.sessionId,
-                        page: this.currentPage,
-                        event: {
-                            type,
-                            element,
-                            details
-                        }
-                    })
-                });
-            } catch (error) {
-                console.error('Event tracking error:', error);
-            }
-        }
-
-        // frontend/index.html এর মধ্যে AnalyticsTracker ক্লাসের updateSessionData মেথড আপডেট করুন
-async updateSessionData() {
-    const currentTime = Date.now();
-    const duration = Math.floor((currentTime - this.startTime) / 1000);
-    
-    try {
-        // Use a simpler approach - just update duration
-        await fetch(`${this.apiBaseUrl}/api/analytics/update`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                sessionId: this.sessionId,
-                page: this.currentPage,
-                duration: duration
-            })
-        });
-    } catch (error) {
-        console.error('Session update error:', error);
-        // Don't show error to user, just log it
-    }
-}
-        setupScrollTracking() {
-            let maxScroll = 0;
-            
-            window.addEventListener('scroll', () => {
-                const scrollTop = window.pageYOffset;
-                const scrollHeight = document.documentElement.scrollHeight;
-                const clientHeight = document.documentElement.clientHeight;
-                const currentScrollDepth = Math.floor((scrollTop / (scrollHeight - clientHeight)) * 100);
-                
-                if (currentScrollDepth > maxScroll) {
-                    maxScroll = currentScrollDepth;
-                    this.scrollDepth = maxScroll;
-                    
-                    // Track major scroll milestones
-                    if ([25, 50, 75, 90, 100].includes(maxScroll)) {
-                        this.trackEvent('scroll', 'page', { depth: maxScroll });
-                    }
-                }
-            });
-        }
-
-        setupClickTracking() {
-            document.addEventListener('click', (e) => {
-                const target = e.target;
-                
-                // Track button clicks
-                if (target.tagName === 'BUTTON' || target.closest('button')) {
-                    const buttonText = target.textContent.trim() || target.closest('button').textContent.trim();
-                    const buttonId = target.id || target.closest('button').id;
-                    
-                    this.trackEvent('click', 'button', {
-                        text: buttonText.substring(0, 50),
-                        id: buttonId,
-                        href: target.href || target.closest('a')?.href
-                    });
-                }
-                
-                // Track link clicks
-                if (target.tagName === 'A' || target.closest('a')) {
-                    const link = target.href || target.closest('a').href;
-                    const linkText = target.textContent.trim() || target.closest('a').textContent.trim();
-                    
-                    this.trackEvent('click', 'link', {
-                        url: link,
-                        text: linkText.substring(0, 50)
-                    });
-                }
-                
-                // Track form interactions
-                if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA') {
-                    this.trackEvent('form_interaction', target.tagName.toLowerCase(), {
-                        id: target.id,
-                        name: target.name,
-                        type: target.type
-                    });
-                }
-            });
-        }
-
-        setupFormTracking() {
-            const forms = document.querySelectorAll('form');
-            forms.forEach(form => {
-                form.addEventListener('submit', (e) => {
-                    const formId = form.id || 'unknown_form';
-                    const formData = new FormData(form);
-                    const formValues = {};
-                    
-                    for (let [key, value] of formData.entries()) {
-                        formValues[key] = value;
-                    }
-                    
-                    this.trackEvent('form_submit', formId, {
-                        fields: Object.keys(formValues),
-                        valuesCount: Object.keys(formValues).length
-                    });
-                });
-            });
-        }
-
-        setupVisibilityTracking() {
-            let hidden, visibilityChange;
-            
-            if (typeof document.hidden !== "undefined") {
-                hidden = "hidden";
-                visibilityChange = "visibilitychange";
-            } else if (typeof document.msHidden !== "undefined") {
-                hidden = "msHidden";
-                visibilityChange = "msvisibilitychange";
-            } else if (typeof document.webkitHidden !== "undefined") {
-                hidden = "webkitHidden";
-                visibilityChange = "webkitvisibilitychange";
-            }
-
-            document.addEventListener(visibilityChange, () => {
-                if (document[hidden]) {
-                    // Page is hidden
-                    this.updateSessionData();
-                } else {
-                    // Page is visible again
-                    this.lastActivity = Date.now();
-                }
-            }, false);
-        }
-
-        setupTimeTracking() {
-            // Update session data every 30 seconds
-            setInterval(() => {
-                this.updateSessionData();
-            }, 30000);
-
-            // Send final data when page is about to unload
-            window.addEventListener('beforeunload', () => {
-                this.updateSessionData();
-            });
-        }
-
-        async init() {
-            // Initial page view tracking
-            await this.trackPageView();
-            
-            // Setup all tracking
-            this.setupScrollTracking();
-            this.setupClickTracking();
-            this.setupFormTracking();
-            this.setupVisibilityTracking();
-            this.setupTimeTracking();
-            
-            console.log('📊 Analytics initialized for session:', this.sessionId);
-        }
-    }
-
-    // Dynamic Content Loading System
-    class ContentManager {
-        constructor() {
-            this.apiBaseUrl = 'https://landingpro-3alp.onrender.com';
-            this.contentCache = {};
-            this.init();
-        }
-
-        async loadContent() {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/api/content`);
-                const data = await response.json();
-                
-                if (data.success && data.content) {
-                    this.contentCache = data.content;
-                    this.applyContent();
-                    console.log('✅ Dynamic content loaded');
-                }
-            } catch (error) {
-                console.error('Content loading error:', error);
-                this.useFallbackContent();
-            }
-        }
-
-        applyContent() {
-            // Update hero section
-            if (this.contentCache.hero_title) {
-                const heroTitle = document.querySelector('h1');
-                if (heroTitle) {
-                    heroTitle.innerHTML = this.contentCache.hero_title.content || heroTitle.innerHTML;
-                }
-            }
-
-            if (this.contentCache.hero_subtitle) {
-                const heroSubtitle = document.querySelector('p.text-gray-600.text-lg');
-                if (heroSubtitle) {
-                    heroSubtitle.textContent = this.contentCache.hero_subtitle.content || heroSubtitle.textContent;
-                }
-            }
-
-            // Update contact information
-            if (this.contentCache.contact_phone) {
-                const phoneElements = document.querySelectorAll('*:contains("+৮৮০ ১৩২৬১৯৮৪৫৬")');
-                phoneElements.forEach(el => {
-                    if (el.textContent.includes('+৮৮০ ১৩২৬১৯৮৪৫৬')) {
-                        el.textContent = el.textContent.replace('+৮৮০ ১৩২৬১৯৮৪৫৬', this.contentCache.contact_phone.content);
-                    }
-                });
-            }
-
-            if (this.contentCache.contact_email) {
-                const emailElements = document.querySelectorAll('*:contains("billaharif661@gmail.com")');
-                emailElements.forEach(el => {
-                    if (el.textContent.includes('billaharif661@gmail.com')) {
-                        el.textContent = el.textContent.replace('billaharif661@gmail.com', this.contentCache.contact_email.content);
-                    }
-                });
-            }
-
-            // Load dynamic packages
-            this.loadPackages();
-            
-            // Load dynamic projects
-            this.loadProjects();
-        }
-
-        async loadPackages() {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/api/packages`);
-                const data = await response.json();
-                
-                if (data.success && data.packages) {
-                    const pricingSection = document.getElementById('pricing');
-                    if (pricingSection) {
-                        this.renderPackages(data.packages, pricingSection);
-                    }
-                }
-            } catch (error) {
-                console.error('Packages loading error:', error);
-            }
-        }
-
-        async loadProjects() {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/api/projects`);
-                const data = await response.json();
-                
-                if (data.success && data.projects) {
-                    const portfolioSection = document.getElementById('portfolio');
-                    if (portfolioSection) {
-                        this.renderProjects(data.projects, portfolioSection);
-                    }
-                }
-            } catch (error) {
-                console.error('Projects loading error:', error);
-            }
-        }
-
-        renderPackages(packages, container) {
-            // Remove existing package cards
-            const existingCards = container.querySelectorAll('.grid > div');
-            existingCards.forEach(card => card.remove());
-            
-            // Create new package cards
-            const grid = container.querySelector('.grid');
-            if (!grid) return;
-            
-            packages.forEach((pkg, index) => {
-                const packageCard = document.createElement('div');
-                packageCard.className = pkg.isPopular 
-                    ? 'bg-gradient-to-b from-blue-50 to-white rounded-2xl p-8 border-2 border-blue-500 shadow-xl relative'
-                    : 'bg-gradient-to-b from-gray-50 to-white rounded-2xl p-8 border border-gray-300 shadow-lg';
-                
-                let featuresHtml = '';
-                if (pkg.features && Array.isArray(pkg.features)) {
-                    featuresHtml = pkg.features.map(feature => `
-                        <li class="flex items-start">
-                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
-                            <span>${feature}</span>
-                        </li>
-                    `).join('');
-                }
-                
-                packageCard.innerHTML = `
-                    ${pkg.isPopular ? `
-                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                            সর্বাধিক জনপ্রিয়
-                        </div>
-                    ` : ''}
-                    
-                    <div class="text-center mb-6">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">${pkg.title}</h3>
-                        <div class="flex justify-center items-baseline">
-                            <span class="text-4xl font-bold text-gray-800">${pkg.symbol} ${pkg.price.toLocaleString()}</span>
-                            <span class="text-gray-600 ml-2">/ প্রজেক্ট</span>
-                        </div>
-                        <p class="text-gray-600 mt-2">${pkg.description || ''}</p>
-                    </div>
-                    
-                    <ul class="space-y-3 mb-8">
-                        ${featuresHtml}
-                    </ul>
-                    
-                    <button onclick="selectPackage('${pkg.name}')" class="w-full ${pkg.buttonColor || 'bg-blue-600'} hover:opacity-90 text-white font-medium py-3 rounded-lg transition duration-300 shadow-lg hover:shadow-xl">
-                        ${pkg.buttonText || 'প্যাকেজ নির্বাচন করুন'}
-                    </button>
-                `;
-                
-                grid.appendChild(packageCard);
-            });
-        }
-
-        renderProjects(projects, container) {
-            // This is a simplified version - you'd need to update your portfolio section HTML structure
-            console.log('Loaded projects:', projects);
-            // Implement project rendering based on your HTML structure
-        }
-
-        useFallbackContent() {
-            console.log('Using fallback content');
-            // Fallback to original static content
-        }
-
-        async init() {
-            await this.loadContent();
-        }
-    }
-
-    // Initialize everything when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize analytics tracking
-        window.analytics = new AnalyticsTracker();
-        
-        // Initialize content manager
-        window.contentManager = new ContentManager();
-        
-        console.log('🚀 LandingPro v2.0 initialized with analytics and dynamic content');
-    });
-</script>
-
-
-<script>
-    class SimpleAnalytics {
-        constructor() {
-            this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            this.apiBaseUrl = 'https://landingpro-call.onrender.com'; // আপনার রেন্ডার URL
-            this.page = this.getPageName();
-            this.startTime = Date.now();
-            
-            this.init();
-        }
-        
-        getPageName() {
-            const path = window.location.pathname;
-            return path.includes('contact') ? 'contact' : 
-                   path.includes('portfolio') ? 'portfolio' : 
-                   path.includes('services') ? 'services' : 
-                   path.includes('pricing') ? 'pricing' : 'home';
-        }
-        
-        getDeviceType() {
-            const userAgent = navigator.userAgent;
-            if (/mobile|android|iphone|ipad|ipod/i.test(userAgent)) return 'mobile';
-            if (/tablet|ipad/i.test(userAgent)) return 'tablet';
-            return 'desktop';
-        }
-        
-        async trackPageView() {
-            try {
-                await fetch(`${this.apiBaseUrl}/api/analytics/track`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sessionId: this.sessionId,
-                        page: this.page,
-                        referrer: document.referrer || 'direct',
-                        deviceType: this.getDeviceType()
-                    })
-                });
-                
-                console.log('📊 Page view tracked');
-            } catch (error) {
-                console.error('Analytics error:', error);
-            }
-        }
-        
-        async trackEvent(type, element) {
-            try {
-                await fetch(`${this.apiBaseUrl}/api/analytics/event`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sessionId: this.sessionId,
-                        type: type,
-                        element: element
-                    })
-                });
-            } catch (error) {
-                // Silent fail
-            }
-        }
-        
-        async updateSession() {
-            const duration = Math.floor((Date.now() - this.startTime) / 1000);
-            
-            try {
-                await fetch(`${this.apiBaseUrl}/api/analytics/update`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sessionId: this.sessionId,
-                        duration: duration
-                    })
-                });
-            } catch (error) {
-                // Silent fail
-            }
-        }
-        
-        init() {
-            // Initial page view
-            this.trackPageView();
-            
-            // Track button clicks
-            document.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                    const button = e.target.tagName === 'BUTTON' ? e.target : e.target.closest('button');
-                    const text = button.textContent.trim().substring(0, 50);
-                    this.trackEvent('click', `button:${text}`);
-                }
-                
-                if (e.target.tagName === 'A') {
-                    const text = e.target.textContent.trim().substring(0, 50);
-                    this.trackEvent('click', `link:${text}`);
-                }
-            });
-            
-            // Track form submissions
-            document.addEventListener('submit', (e) => {
-                this.trackEvent('form_submit', e.target.id || 'form');
-            });
-            
-            // Update session periodically
-            setInterval(() => this.updateSession(), 30000);
-            
-            // Final update before unload
-            window.addEventListener('beforeunload', () => this.updateSession());
-        }
-    }
-    
-    // Initialize analytics when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-        window.analytics = new SimpleAnalytics();
-    });
-</script>
 </body>
 </html>
