@@ -813,46 +813,105 @@
     });
 
     // Check saved login from localStorage
-    async function checkSavedLogin() {
-        const savedToken = localStorage.getItem('adminToken');
-        const savedAdmin = localStorage.getItem('adminData');
+// Check saved login - উন্নত সংস্করণ
+async function checkSavedLogin() {
+    console.log('Checking saved login...');
+    
+    const savedToken = localStorage.getItem('adminToken');
+    const savedAdmin = localStorage.getItem('adminData');
+    
+    if (!savedToken || !savedAdmin) {
+        console.log('No saved login found');
+        showLoginPage();
+        return;
+    }
+    
+    try {
+        currentToken = savedToken;
+        currentAdmin = JSON.parse(savedAdmin);
         
-        if (savedToken && savedAdmin) {
-            try {
-                currentToken = savedToken;
-                currentAdmin = JSON.parse(savedAdmin);
-                
-                // Verify token
-                const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
-                    headers: {
-                        'Authorization': `Bearer ${currentToken}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        // Auto login successful
-                        showDashboard();
-                        showToast('স্বয়ংক্রিয়ভাবে লগইন হয়েছে', 'success');
-                        return;
-                    }
-                }
-                
-                // If verification failed, clear invalid data
-                clearSavedLogin();
-                
-            } catch (error) {
-                console.error('Auto login error:', error);
-                clearSavedLogin();
-            }
+        console.log('Attempting auto-login with saved token...');
+        
+        // First, test API connection
+        const healthResponse = await fetch(`${API_BASE_URL}/api/health`);
+        if (!healthResponse.ok) {
+            throw new Error('API server not reachable');
         }
         
-        // Show login page
+        // Then verify token
+        const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+                'Accept': 'application/json'
+            },
+            // Add timeout
+            signal: AbortSignal.timeout(5000)
+        });
+        
+        console.log('Verify response status:', response.status);
+        
+        // Check content type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response from verify:', text.substring(0, 200));
+            throw new Error('Server returned non-JSON response');
+        }
+        
+        const data = await response.json();
+        console.log('Verify response data:', data);
+        
+        if (response.ok && data.success) {
+            // Update admin data with fresh data from server
+            if (data.admin) {
+                currentAdmin = data.admin;
+                localStorage.setItem('adminData', JSON.stringify(currentAdmin));
+            }
+            
+            // Auto login successful
+            showDashboard();
+            showToast('স্বয়ংক্রিয়ভাবে লগইন হয়েছে', 'success');
+            return;
+        }
+        
+        // If token is expired, try to refresh (if you implement refresh tokens)
+        if (data.code === 'TOKEN_EXPIRED') {
+            console.log('Token expired, clearing saved login');
+            clearSavedLogin();
+            showLoginPage();
+            showToast('সেশন মেয়াদ শেষ হয়েছে, আবার লগইন করুন', 'warning');
+            return;
+        }
+        
+        // Other errors
+        throw new Error(data.error || 'টোকেন ভেরিফিকেশন ব্যর্থ');
+        
+    } catch (error) {
+        console.error('Auto login error:', error);
+        
+        // Specific error handling
+        if (error.name === 'AbortError' || error.message.includes('timeout')) {
+            console.log('API request timeout');
+            showLoginPage();
+            showToast('সার্ভারে কানেক্ট হতে সমস্যা, আবার চেষ্টা করুন', 'warning');
+            return;
+        }
+        
+        if (error.message.includes('API server not reachable')) {
+            console.log('API server not reachable');
+            showLoginPage();
+            showToast('সার্ভার অফলাইন, পরে চেষ্টা করুন', 'error');
+            return;
+        }
+        
+        // Clear invalid saved data
+        clearSavedLogin();
         showLoginPage();
+        
+        // Don't show toast for auto-login failures to avoid annoyance
+        console.log('Auto-login failed, showing login page');
     }
-
+}
     // Clear saved login data
     function clearSavedLogin() {
         localStorage.removeItem('adminToken');
