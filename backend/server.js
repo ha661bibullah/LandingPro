@@ -24,7 +24,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB Connection with better error handling
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://billaharif661_db_user:2GCmDhaEOQUteXow@iwonttotast0.mza6qgz.mongodb.net/LandingPro?retryWrites=true&w=majority&appName=IWontToTast0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/landingpro';
 
 // Disable mongoose versioning globally
 mongoose.set('versionKey', false);
