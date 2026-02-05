@@ -217,12 +217,85 @@
         .skip-to-content:focus {
             top: 0;
         }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: #000;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Skip to main content link for accessibility -->
     <a href="#main-content" class="skip-to-content">সরাসরি মূল কন্টেন্টে যান</a>
     
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="text-center">
+                <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-check-circle text-green-500 text-4xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">আপনার মেসেজ সফলভাবে পাঠানো হয়েছে!</h3>
+                <p class="text-gray-600 mb-6" id="modalMessage"></p>
+                <button onclick="closeModal()" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition duration-300">
+                    ঠিক আছে
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Preview Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeProjectModal()">&times;</span>
+            <div id="projectModalContent">
+                <!-- Project content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <!-- Analytics Tracking System -->
     <script>
         class VisitorTracker {
@@ -534,10 +607,12 @@
     <nav class="bg-white shadow-md sticky top-0 z-50" role="navigation" aria-label="প্রধান নেভিগেশন">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center">
-                <div class="bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-rocket text-white text-lg" aria-hidden="true"></i>
-                </div>
-                <span class="ml-3 text-xl font-bold text-gray-800">ল্যান্ডিং<span class="text-blue-600">প্রো</span></span>
+                <a href="#" onclick="scrollToTop(event)" class="flex items-center">
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-rocket text-white text-lg" aria-hidden="true"></i>
+                    </div>
+                    <span class="ml-3 text-xl font-bold text-gray-800">ল্যান্ডিং<span class="text-blue-600">প্রো</span></span>
+                </a>
             </div>
             
             <div class="hidden md:flex space-x-8">
@@ -837,9 +912,9 @@
                                 <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Node.js</span>
                                 <span class="bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-full">Express.js</span>
                             </div>
-                            <a href="https://mrittuandafter.shop" target="_blank" rel="noopener noreferrer" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <button onclick="showProjectPreview('ইকমার্স ল্যান্ডিং পেজ', 'পণ্য প্রদর্শন, ক্যাটালগ এবং চেকআউট সিস্টেম সহ একটি সম্পূর্ণ ইকমার্স ল্যান্ডিং পেজ। এই প্রকল্পে ব্যবহৃত হয়েছে HTML, Tailwind CSS, Node.js এবং Express.js।', 'https://mrittuandafter.shop')" class="inline-block text-blue-600 font-medium hover:text-blue-800 cursor-pointer">
                                 <i class="fas fa-external-link-alt mr-2" aria-hidden="true"></i>লাইভ দেখুন →
-                            </a>
+                            </button>
                         </div>
                     </article>
                     
@@ -857,9 +932,9 @@
                                 <span class="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full">JavaScript</span>
                                 <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">MongoDB</span>
                             </div>
-                            <a href="https://playful-rugelach-33592e.netlify.app" target="_blank" rel="noopener noreferrer" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <button onclick="showProjectPreview('এডুটেক প্ল্যাটফর্ম', 'কোর্স লিস্টিং, স্টুডেন্ট ড্যাশবোর্ড এবং পেমেন্ট ইন্টিগ্রেশন সহ শিক্ষামূলক প্ল্যাটফর্ম। এই প্রকল্পে ব্যবহৃত হয়েছে HTML, Tailwind CSS, JavaScript এবং MongoDB।', 'https://playful-rugelach-33592e.netlify.app')" class="inline-block text-blue-600 font-medium hover:text-blue-800 cursor-pointer">
                                 <i class="fas fa-external-link-alt mr-2" aria-hidden="true"></i>লাইভ দেখুন →
-                            </a>
+                            </button>
                         </div>
                     </article>
                     
@@ -877,9 +952,9 @@
                                 <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Express.js</span>
                                 <span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full">REST API</span>
                             </div>
-                            <a href="https://example-healthcare.com" target="_blank" rel="noopener noreferrer" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <button onclick="showProjectPreview('হেলথকেয়ার সার্ভিস', 'ডাক্তার অ্যাপয়েন্টমেন্ট, অনলাইন কনসাল্টেশন এবং মেডিকেল সার্ভিস বুকিং সিস্টেম। এই প্রকল্পে ব্যবহৃত হয়েছে HTML, CSS, Express.js এবং REST API।', 'https://example-healthcare.com')" class="inline-block text-blue-600 font-medium hover:text-blue-800 cursor-pointer">
                                 <i class="fas fa-external-link-alt mr-2" aria-hidden="true"></i>লাইভ দেখুন →
-                            </a>
+                            </button>
                         </div>
                     </article>
                 </div>
@@ -900,9 +975,9 @@
                                 <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Node.js</span>
                                 <span class="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full">Socket.io</span>
                             </div>
-                            <a href="https://example-food.com" target="_blank" rel="noopener noreferrer" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <button onclick="showProjectPreview('ফুড ডেলিভারি সার্ভিস', 'অর্ডার ট্র্যাকিং, মেনু ম্যানেজমেন্ট এবং রিয়েলটাইম আপডেট সহ ফুড ডেলিভারি ওয়েবসাইট। এই প্রকল্পে ব্যবহৃত হয়েছে HTML, Tailwind CSS, Node.js এবং Socket.io।', 'https://example-food.com')" class="inline-block text-blue-600 font-medium hover:text-blue-800 cursor-pointer">
                                 <i class="fas fa-external-link-alt mr-2" aria-hidden="true"></i>লাইভ দেখুন →
-                            </a>
+                            </button>
                         </div>
                     </article>
                     
@@ -920,9 +995,9 @@
                                 <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Express.js</span>
                                 <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">REST API</span>
                             </div>
-                            <a href="https://example-travel.com" target="_blank" rel="noopener noreferrer" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <button onclick="showProjectPreview('ট্রাভেল এজেন্সি', 'প্যাকেজ বুকিং, হোটেল রিজার্ভেশন এবং ট্রিপ প্ল্যানিং সহ ট্রাভেল এজেন্সি ওয়েবসাইট। এই প্রকল্পে ব্যবহৃত হয়েছে HTML, Tailwind CSS, Express.js এবং REST API।', 'https://example-travel.com')" class="inline-block text-blue-600 font-medium hover:text-blue-800 cursor-pointer">
                                 <i class="fas fa-external-link-alt mr-2" aria-hidden="true"></i>লাইভ দেখুন →
-                            </a>
+                            </button>
                         </div>
                     </article>
                     
@@ -940,9 +1015,9 @@
                                 <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Node.js</span>
                                 <span class="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full">JavaScript</span>
                             </div>
-                            <a href="https://example-nonprofit.com" target="_blank" rel="noopener noreferrer" class="inline-block text-blue-600 font-medium hover:text-blue-800">
+                            <button onclick="showProjectPreview('নন-প্রফিট সংস্থা', 'ডোনেশন সিস্টেম, ইভেন্ট ম্যানেজমেন্ট এবং ভলান্টিয়ার রেজিস্ট্রেশন সহ নন-প্রফিট ওয়েবসাইট। এই প্রকল্পে ব্যবহৃত হয়েছে HTML, CSS, Node.js এবং JavaScript।', 'https://example-nonprofit.com')" class="inline-block text-blue-600 font-medium hover:text-blue-800 cursor-pointer">
                                 <i class="fas fa-external-link-alt mr-2" aria-hidden="true"></i>লাইভ দেখুন →
-                            </a>
+                            </button>
                         </div>
                     </article>
                 </div>
@@ -1046,6 +1121,18 @@
                             </li>
                             <li class="flex items-start">
                                 <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>সাধারণ ল্যান্ডিং পেজ এডমিন প্যানেল</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>SEO অপটিমাইজড</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>.com/.net/.org ডোমেইন সেটআপ সহ</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
                                 <span>৭ দিন সাপোর্ট</span>
                             </li>
                         </ul>
@@ -1093,6 +1180,18 @@
                             </li>
                             <li class="flex items-start">
                                 <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>অ্যাডভান্সড ল্যান্ডিং পেজ এডমিন প্যানেল</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>ফুল SEO অপটিমাইজড</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>.com/.net/.org ডোমেইন + SSL সার্টিফিকেট</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
                                 <span>ফর্ম হ্যান্ডলিং ও ভ্যালিডেশন</span>
                             </li>
                         </ul>
@@ -1132,7 +1231,19 @@
                             </li>
                             <li class="flex items-start">
                                 <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
-                                <span>অ্যাডমিন প্যানেল</span>
+                                <span>প্রফেশনাল ল্যান্ডিং পেজ এডমিন প্যানেল</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>কমপ্লিট SEO + গুগল অ্যানালিটিক্স ইন্টিগ্রেশন</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>প্রিমিয়াম .com ডোমেইন + প্রিমিয়াম হোস্টিং</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
+                                <span>সিকিউরিটি অডিট ও অপটিমাইজেশন</span>
                             </li>
                             <li class="flex items-start">
                                 <i class="fas fa-check text-green-500 mt-1 mr-3" aria-hidden="true"></i>
@@ -1175,9 +1286,9 @@
                                             <i class="fas fa-envelope text-blue-600 text-xl" aria-hidden="true"></i>
                                         </div>
                                         <div>
-                                            <h3 class="font-bold text-gray-800">ইমেইল ঠিকানা</h3>
+                                            <h3 class="font-bold text-gray-800">ইমেইল ঠিকানা (ঐচ্ছিক)</h3>
                                             <p class="text-gray-700">billaharif661@gmail.com</p>
-                                            <p class="text-gray-600 text-sm">২৪ ঘণ্টার মধ্যে রিপ্লাই</p>
+                                            <p class="text-gray-600 text-sm">ঐচ্ছিক - সরাসরি ফোনেও যোগাযোগ করতে পারেন</p>
                                         </div>
                                     </div>
                                     
@@ -1220,14 +1331,14 @@
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-gray-700 mb-2" for="email">ইমেইল ঠিকানা *</label>
-                                            <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="আপনার ইমেইল ঠিকানা">
+                                            <label class="block text-gray-700 mb-2" for="email">ইমেইল ঠিকানা <span class="text-gray-500 text-sm">(ঐচ্ছিক)</span></label>
+                                            <input type="email" id="email" name="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="আপনার ইমেইল ঠিকানা (ঐচ্ছিক)">
                                         </div>
                                     </div>
                                     
                                     <div class="mt-6">
-                                        <label class="block text-gray-700 mb-2" for="phone">ফোন নম্বর</label>
-                                        <input type="tel" id="phone" name="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+৮৮০ ১৩২৬১৯৮৪৫৬">
+                                        <label class="block text-gray-700 mb-2" for="phone">ফোন নম্বর *</label>
+                                        <input type="tel" id="phone" name="phone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+৮৮০ ১৩২৬১৯৮৪৫৬">
                                     </div>
                                     
                                     <div class="mt-6">
@@ -1380,12 +1491,12 @@
             
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
             const package = document.getElementById('package').value;
             const message = document.getElementById('message').value;
-            const phone = document.getElementById('phone').value || '+৮৮০ ১৩২৬১৯৮৪৫৬';
             
             // ভ্যালিডেশন
-            if(!name || !email || !message) {
+            if(!name || !phone || !message) {
                 showNotification('দয়া করে প্রয়োজনীয় ফিল্ড গুলো পূরণ করুন।', 'error');
                 return;
             }
@@ -1399,7 +1510,7 @@
                     },
                     body: JSON.stringify({
                         name: name,
-                        email: email,
+                        email: email || 'ইমেইল দেওয়া হয়নি',
                         phone: phone,
                         package: package,
                         message: message
@@ -1409,7 +1520,9 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    showNotification(`ধন্যবাদ ${name}! আপনার রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই ${email} এ যোগাযোগ করব।`);
+                    // Show success modal with message
+                    const modalMessage = `ধন্যবাদ ${name}! আপনার রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই ${phone} নম্বরে যোগাযোগ করব।`;
+                    showSuccessModal(modalMessage);
                     
                     // ফর্ম রিসেট
                     document.getElementById('contact-form').reset();
@@ -1418,7 +1531,7 @@
                     if (window.visitorTracker) {
                         window.visitorTracker.trackEvent('form_submit_success', 'contact_form', {
                             name: name,
-                            email: email,
+                            email: email || 'no_email',
                             package: package
                         });
                     }
@@ -1427,13 +1540,101 @@
                 }
             } catch (error) {
                 console.error('Form submission error:', error);
-                showNotification('নেটওয়ার্ক সমস্যা। দয়া করে আবার চেষ্টা করুন।', 'error');
+                // Show fallback modal
+                const modalMessage = `ধন্যবাদ ${name}! সরাসরি WhatsApp এ যোগাযোগ করুন এই নম্বরে: +৮৮০ ১৩২৬১৯৮৪৫৬`;
+                showSuccessModal(modalMessage);
                 
                 // Fallback to WhatsApp if API fails
-                const whatsappMessage = `ল্যান্ডিংপ্রো - নতুন ক্লায়েন্টের ইনকোয়ারি:\n\nনাম: ${name}\nইমেইল: ${email}\nফোন: ${phone}\nপ্যাকেজ: ${package}\n\nমেসেজ: ${message}`;
+                const whatsappMessage = `ল্যান্ডিংপ্রো - নতুন ক্লায়েন্টের ইনকোয়ারি:\n\nনাম: ${name}\nইমেইল: ${email || 'ইমেইল দেওয়া হয়নি'}\nফোন: ${phone}\nপ্যাকেজ: ${package}\n\nমেসেজ: ${message}`;
                 const whatsappUrl = `https://wa.me/8801326198456?text=${encodeURIComponent(whatsappMessage)}`;
-                window.open(whatsappUrl, '_blank');
+                setTimeout(() => {
+                    window.open(whatsappUrl, '_blank');
+                }, 2000);
             }
+        }
+        
+        // Success Modal Functions
+        function showSuccessModal(message) {
+            const modal = document.getElementById('successModal');
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            modal.style.display = 'none';
+        }
+        
+        // Project Preview Modal Functions
+        function showProjectPreview(title, description, liveUrl) {
+            const modal = document.getElementById('projectModal');
+            const content = document.getElementById('projectModalContent');
+            
+            content.innerHTML = `
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">${title}</h3>
+                    <div class="w-20 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto mb-4"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="font-bold text-gray-700 mb-2">প্রকল্পের বিবরণ:</h4>
+                    <p class="text-gray-600">${description}</p>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="font-bold text-gray-700 mb-2">লাইভ প্রিভিউ:</h4>
+                    <div class="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                        <p class="text-gray-700 mb-2">এই প্রকল্পটি সরাসরি দেখতে নিচের বাটনে ক্লিক করুন:</p>
+                        <a href="${liveUrl}" target="_blank" rel="noopener noreferrer" class="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition duration-300">
+                            <i class="fas fa-external-link-alt mr-2"></i>লাইভ সাইটে যান
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="closeProjectModal()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition duration-300">
+                        বন্ধ করুন
+                    </button>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            
+            // Track project preview
+            if (window.visitorTracker) {
+                window.visitorTracker.trackEvent('project_preview', title, {
+                    page: 'portfolio'
+                });
+            }
+        }
+        
+        function closeProjectModal() {
+            const modal = document.getElementById('projectModal');
+            modal.style.display = 'none';
+        }
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            const successModal = document.getElementById('successModal');
+            const projectModal = document.getElementById('projectModal');
+            
+            if (event.target === successModal) {
+                closeModal();
+            }
+            
+            if (event.target === projectModal) {
+                closeProjectModal();
+            }
+        });
+        
+        // Scroll to top function
+        function scrollToTop(event) {
+            event.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
         
         // নোটিফিকেশন ফাংশন
