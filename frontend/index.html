@@ -263,68 +263,86 @@
         .close-modal:hover {
             color: #000;
         }
-
-       
-    /* বিদ্যমান স্টাইলের সাথে যোগ করুন */
-
-    /* হাইলাইটেড টেক্সট স্টাইল */
-    .highlight-paragraph {
-        background: linear-gradient(120deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%);
-        border-left: 4px solid #3b82f6;
-        padding: 1.5rem;
-        border-radius: 0.75rem;
-        margin: 1.5rem 0;
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: #1f2937;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .highlight-paragraph::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, transparent 90%, rgba(59, 130, 246, 0.1) 90%);
-        z-index: 0;
-    }
-    
-    .highlight-paragraph p {
-        position: relative;
-        z-index: 1;
-        margin: 0;
-    }
-    
-    /* এনিমেশন যোগ করুন */
-    @keyframes highlightPulse {
-        0% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-        100% { transform: translateY(0); }
-    }
-    
-    .highlight-paragraph {
-        animation: highlightPulse 3s ease-in-out infinite;
-    }
-    
-    /* মোবাইলে এডজাস্টমেন্ট */
-    @media (max-width: 768px) {
-        .highlight-paragraph {
-            padding: 1.25rem;
-            font-size: 1rem;
-            margin: 1rem 0;
+        
+        /* Highlighted contact section styles */
+        .cta-highlight-box {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.25);
+            margin-bottom: 30px;
         }
         
-        .highlight-paragraph {
-            animation: none; /* মোবাইলে এনিমেশন বন্ধ */
+        .cta-highlight-box::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 1%);
+            background-size: 20px 20px;
+            z-index: 0;
         }
-    }
-
-
         
+        .cta-highlight-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cta-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+        }
+        
+        .cta-description {
+            font-size: 18px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 20px;
+        }
+        
+        .cta-urgent-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .cta-highlight-box {
+                padding: 24px;
+                margin-bottom: 24px;
+            }
+            
+            .cta-title {
+                font-size: 24px;
+            }
+            
+            .cta-description {
+                font-size: 16px;
+            }
+        }
+        
+        /* Pulse animation for attention */
+        @keyframes pulse-attention {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse-attention {
+            animation: pulse-attention 2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -378,14 +396,7 @@
 
             generateSessionId() {
                 return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-/*************  ✨ Windsurf Command ⭐  *************/
-            /**
-             * Get the current page name from the URL path and hash.
-             * The page names are: 'home', 'contact', 'portfolio', 'services', 'pricing'.
-             * @returns {string} The current page name.
-             */
-/*******  ec09d656-370c-437c-9b62-f0ca189d36b4  *******/            }
-
+            }
 
             getCurrentPage() {
                 const path = window.location.pathname;
@@ -1161,7 +1172,7 @@
                         <div class="text-center mb-6">
                             <h3 class="text-2xl font-bold text-gray-800 mb-2">বেস্ট সেলার</h3>
                             <div class="flex justify-center items-baseline">
-                                <span class="text-4xl font-bold text-gray-800">৳ ২,৯৯৯</span>
+                                <span class="text-4xl font-bold text-gray-800">৳ 2,999</span>
                                 <span class="text-gray-600 ml-2">/ প্রজেক্ট</span>
                             </div>
                             <p class="text-gray-600 mt-2">প্রারম্ভিক ব্যবসার জন্য</p>
@@ -1220,7 +1231,7 @@
                         <div class="text-center mb-6">
                             <h3 class="text-2xl font-bold text-gray-800 mb-2">স্ট্যান্ডার্ড</h3>
                             <div class="flex justify-center items-baseline">
-                                <span class="text-4xl font-bold text-gray-800">৳ ১২,০০০</span>
+                                <span class="text-4xl font-bold text-gray-800">৳ 12,000</span>
                                 <span class="text-gray-600 ml-2">/ প্রজেক্ট</span>
                             </div>
                             <p class="text-gray-600 mt-2">ফুল ফাংশনাল ল্যান্ডিং পেজের জন্য</p>
@@ -1275,7 +1286,7 @@
                         <div class="text-center mb-6">
                             <h3 class="text-2xl font-bold text-gray-800 mb-2">প্রিমিয়াম</h3>
                             <div class="flex justify-center items-baseline">
-                                <span class="text-4xl font-bold text-gray-800">৳ ২৫,০০০</span>
+                                <span class="text-4xl font-bold text-gray-800">৳ 25,000</span>
                                 <span class="text-gray-600 ml-2">/ প্রজেক্ট</span>
                             </div>
                             <p class="text-gray-600 mt-2">কাস্টম ও জটিল প্রকল্পের জন্য</p>
@@ -1335,20 +1346,19 @@
                     <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
                         <div class="md:flex">
                             <div class="md:w-2/5 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 md:p-12">
-                                <!-- বিদ্যমান অংশ -->
-<div class="md:w-2/5 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 md:p-12">
-    <h2 class="text-3xl font-bold text-gray-800 mb-6">আজই শুরু করুন আপনার প্রজেক্ট</h2>
-    
-    <!-- হাইলাইটেড প্যারাগ্রাফ -->
-    <div class="highlight-paragraph">
-        <p>আপনার ব্যবসার বা যে কোন সেবার জন্য একটি পেশাদার ল্যান্ডিং পেজ তৈরি করতে এখনই যোগাযোগ করুন। আমরা ২৪ ঘণ্টার মধ্যে রিপ্লাই দিব।</p>
-    </div>
-    
-    <!-- বাকি কন্টেন্ট -->
-    <div class="space-y-6">
-        <!-- ... -->
-    </div>
-</div>
+                                <!-- হাইলাইটেড CTA সেকশন -->
+                                <div class="cta-highlight-box pulse-attention">
+                                    <div class="cta-highlight-content">
+                                        <h2 class="cta-title">আজই শুরু করুন আপনার প্রজেক্ট</h2>
+                                        <p class="cta-description">
+                                            আপনার ব্যবসার বা যে কোন সেবার জন্য একটি পেশাদার ল্যান্ডিং পেজ তৈরি করতে এখনই যোগাযোগ করুন। আমরা ২৪ ঘণ্টার মধ্যে রিপ্লাই দিব।
+                                        </p>
+                                        <div class="cta-urgent-badge">
+                                            <i class="fas fa-clock mr-2"></i> ২৪ ঘণ্টার মধ্যে উত্তর
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="space-y-6">
                                     <div class="flex items-start">
                                         <div class="bg-white p-3 rounded-xl shadow-sm mr-4">
@@ -1356,7 +1366,7 @@
                                         </div>
                                         <div>
                                             <h3 class="font-bold text-gray-800">ফোন নম্বর</h3>
-                                            <p class="text-gray-700">+880 1326198456</p>
+                                            <p class="text-gray-700">+880 1326 198456</p>
                                             <p class="text-gray-600 text-sm">ওয়াটসঅ্যাপ এবং টেলিগ্রাম এ উপলব্ধ</p>
                                         </div>
                                     </div>
@@ -1418,16 +1428,16 @@
                                     
                                     <div class="mt-6">
                                         <label class="block text-gray-700 mb-2" for="phone">ফোন নম্বর *</label>
-                                        <input type="tel" id="phone" name="phone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+880 1326198456">
+                                        <input type="tel" id="phone" name="phone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+880 1326 198456">
                                     </div>
                                     
                                     <div class="mt-6">
                                         <label class="block text-gray-700 mb-2" for="package">পছন্দের প্যাকেজ</label>
                                         <select id="package" name="package" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                             <option value="">প্যাকেজ নির্বাচন করুন</option>
-                                            <option value="বেস্ট সেলার">বেস্ট সেলার - ৳ ২,৯৯৯</option>
-                                            <option value="স্ট্যান্ডার্ড">স্ট্যান্ডার্ড - ৳ ১২,০০০</option>
-                                            <option value="প্রিমিয়াম">প্রিমিয়াম - ৳ ২৫,০০০</option>
+                                            <option value="বেস্ট সেলার">বেস্ট সেলার - ৳ 2,999</option>
+                                            <option value="স্ট্যান্ডার্ড">স্ট্যান্ডার্ড - ৳ 12,000</option>
+                                            <option value="প্রিমিয়াম">প্রিমিয়াম - ৳ 25,000</option>
                                             <option value="কাস্টম">কাস্টম প্রকল্প</option>
                                         </select>
                                     </div>
@@ -1494,7 +1504,7 @@
                     <ul class="space-y-2">
                         <li class="flex items-center text-gray-400">
                             <i class="fas fa-phone mr-3" aria-hidden="true"></i>
-                            <span>+880 1326198456</span>
+                            <span>+880 1326 198456</span>
                         </li>
                         <li class="flex items-center text-gray-400">
                             <i class="fas fa-envelope mr-3" aria-hidden="true"></i>
@@ -1621,7 +1631,7 @@
             } catch (error) {
                 console.error('Form submission error:', error);
                 // Show fallback modal
-                const modalMessage = `ধন্যবাদ ${name}! সরাসরি WhatsApp এ যোগাযোগ করুন এই নম্বরে: +880 1326198456`;
+                const modalMessage = `ধন্যবাদ ${name}! সরাসরি WhatsApp এ যোগাযোগ করুন এই নম্বরে: +880 1326 198456`;
                 showSuccessModal(modalMessage);
                 
                 // Fallback to WhatsApp if API fails
